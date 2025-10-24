@@ -1,4 +1,4 @@
-import { Background } from "@src/components/auth/Background";
+import { Background } from "@src/components/auth/AuthBg";
 import { AuthProvider } from "@src/context/AuthContext";
 import { LoadingProvider } from "@src/context/LoadingContext";
 import { Stack } from "expo-router";

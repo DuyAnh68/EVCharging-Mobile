@@ -1,4 +1,4 @@
-import { Background } from "@src/components/auth/Background";
+import { Background } from "@src/components/auth/AuthBg";
 import { COLORS, TEXTS } from "@src/styles/theme";
 import { LinearGradient } from "expo-linear-gradient";
 import { Stack } from "expo-router";

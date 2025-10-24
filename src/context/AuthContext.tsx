@@ -46,7 +46,6 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       refreshTimeout.current = setTimeout(async () => {
         console.log("🔄 Auto refreshing token...");
         const res = await refresh(refreshToken);
-        console.log("🔁 refresh result:", res);
         if (res.success) {
           setAccessToken(res.data.accessToken);
           setRefreshToken(res.data.refreshToken);
@@ -77,8 +76,6 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         "refreshToken",
       ]).then((res) => res.map(([, v]) => v));
 
-      console.log("StoredRefresh", storedRefresh);
-
       if (!storedAccess || !storedRefresh) {
         // accessToken, refreshToken đều null
         setAccessToken(null);
@@ -94,7 +91,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
       if (decoded?.exp && decoded.exp > now) {
         // accessToken còn hạn
-        console.log("Access token còn hạn, đăng nhập lại người dùng...");
+        console.log("👌 Access token còn hạn, đăng nhập lại người dùng...");
         setAccessToken(storedAccess);
         setRefreshToken(storedRefresh);
         setExp(decoded.exp);
@@ -106,7 +103,6 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         // accessToken hết hạn → thử refresh
         console.log("⚠️ Access token hết hạn, đang thử refresh...");
         const res = await refresh(storedRefresh);
-        console.log("🔁 refresh result khi accessToken hết hạn:", res);
         if (res.success) {
           setAccessToken(res.data.accessToken);
           setRefreshToken(res.data.refreshToken);
@@ -139,7 +135,6 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
   // Logout
   const logout = async () => {
-    console.log("🚪 Logout triggered");
     if (refreshTimeout.current) clearTimeout(refreshTimeout.current);
     await AsyncStorage.multiRemove([
       "accessToken",
@@ -166,7 +161,6 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   useEffect(() => {
     // Lắng nghe sự kiện token hết hạn từ axiosClient
     const handleTokenExpired = async () => {
-      console.log("🔴 Token expired event received");
       setErrorMsg("Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại!");
       setErrorModal(true);
       setTimeout(async () => {
