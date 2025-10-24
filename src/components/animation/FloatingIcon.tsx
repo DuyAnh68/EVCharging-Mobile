@@ -59,14 +59,24 @@ export function FloatingIcon({ name, size, x, y }: Props) {
         animatedStyle,
       ]}
     >
+      {name === "sun" && (
+        <Feather name="sun" size={size} color="rgba(255, 223, 0, 0.25)" />
+      )}
       {name === "leaf" && (
-        <FontAwesome5 name="leaf" size={size} color="rgba(255,255,255,0.15)" />
+        <FontAwesome5
+          name="leaf"
+          size={size}
+          color="rgba(144, 238, 144, 0.2)"
+        />
       )}
       {name === "wind" && (
-        <Feather name="wind" size={size} color="rgba(255,255,255,0.12)" />
+        <Feather name="wind" size={size} color="rgba(173, 216, 230, 0.18)" />
       )}
       {name === "drop" && (
-        <Entypo name="drop" size={size} color="rgba(255,255,255,0.1)" />
+        <Entypo name="drop" size={size} color="rgba(135, 206, 250, 0.18)" />
+      )}
+      {name === "cloud" && (
+        <Entypo name="cloud" size={size} color="rgba(224, 255, 255, 0.2)" />
       )}
     </Animated.View>
   );
