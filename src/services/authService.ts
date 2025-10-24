@@ -16,4 +16,9 @@ export const authService = {
   refresh: async (data: string) => {
     return await authRepo.refresh(data);
   },
+
+  // Get info
+  getInfo: async () => {
+    return await authRepo.getInfo();
+  },
 };

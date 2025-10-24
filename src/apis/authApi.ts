@@ -31,4 +31,14 @@ export const authApi = {
       message: res.data?.message,
     };
   },
+
+  // GET INFO
+  getInfo: async () => {
+    const res = await axiosClient.get(`/accounts/me`);
+    return {
+      status: res.status,
+      data: res.data,
+      message: res.data?.message,
+    };
+  },
 };
