@@ -42,11 +42,9 @@ export default function HomeScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#F2F2F7",
   },
   header: {
     padding: 20,
-    backgroundColor: "#FFFFFF",
     marginBottom: 10,
   },
   title: {

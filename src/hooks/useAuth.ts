@@ -77,7 +77,6 @@ export const useAuth = () => {
   // REFRESH
   const refresh = async (payload: string) => {
     try {
-      console.log("useAuth payload", payload);
       const res = await authService.refresh(payload);
       const isSuccess = res.status === 200 || res.status === 201;
 
