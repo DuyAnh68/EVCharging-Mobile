@@ -7,11 +7,22 @@ import axios, {
   InternalAxiosRequestConfig,
 } from "axios";
 
-const BASE_URL =
-  process.env.EXPO_PUBLIC_API_URL || "https://your-api-domain.com/api";
+const BASE_URL = process.env.EXPO_PUBLIC_API_URL;
+
+if (!BASE_URL) {
+  if (__DEV__) {
+    throw new Error(
+      "[❌ CONFIG ERROR] Missing EXPO_PUBLIC_API_URL in environment variables."
+    );
+  } else {
+    console.warn(
+      "[⚠️ WARNING] Missing EXPO_PUBLIC_API_URL. Using fallback URL."
+    );
+  }
+}
 
 const axiosClient: AxiosInstance = axios.create({
-  baseURL: BASE_URL,
+  baseURL: BASE_URL || "https://fallback-api-domain.com/api",
   timeout: 50000,
   headers: {
     "Content-Type": "application/json",
@@ -42,7 +53,7 @@ axiosClient.interceptors.response.use(
     };
 
     if (status === 401 && originalRequest) {
-      console.log("axiosClient bị 401!!!")
+      console.log("axiosClient bị 401!!!");
       tokenEvents.emit("tokenExpired");
     }
 

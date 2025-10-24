@@ -5,6 +5,7 @@ import { useLoading } from "@src/context/LoadingContext";
 import { useAuth } from "@src/hooks/useAuth";
 import { User } from "@src/types/user";
 import { tokenEvents } from "@src/utils/tokenEvents";
+import { router } from "expo-router";
 import { createContext, useContext, useEffect, useRef, useState } from "react";
 
 type AuthContextType = {
@@ -29,7 +30,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [errorMsg, setErrorMsg] = useState("");
 
   // Hook
-  const { showLoading, hideLoading } = useLoading();
+  const { showLoading, hideLoading, resetLoading } = useLoading();
   const { refresh, decodeToken, getInfo } = useAuth();
 
   // Ref
@@ -45,6 +46,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       refreshTimeout.current = setTimeout(async () => {
         console.log("🔄 Auto refreshing token...");
         const res = await refresh(refreshToken);
+        console.log("🔁 refresh result:", res);
         if (res.success) {
           setAccessToken(res.data.accessToken);
           setRefreshToken(res.data.refreshToken);
@@ -62,6 +64,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
   // Check auth
   const initAuth = async () => {
+    resetLoading();
     if (hasInitialized.current) return;
     hasInitialized.current = true;
 
@@ -103,6 +106,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         // accessToken hết hạn → thử refresh
         console.log("⚠️ Access token hết hạn, đang thử refresh...");
         const res = await refresh(storedRefresh);
+        console.log("🔁 refresh result khi accessToken hết hạn:", res);
         if (res.success) {
           setAccessToken(res.data.accessToken);
           setRefreshToken(res.data.refreshToken);
@@ -135,6 +139,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
   // Logout
   const logout = async () => {
+    console.log("🚪 Logout triggered");
     if (refreshTimeout.current) clearTimeout(refreshTimeout.current);
     await AsyncStorage.multiRemove([
       "accessToken",
@@ -142,11 +147,13 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       "tokenExp",
       "user",
     ]);
+
     setAccessToken(null);
     setRefreshToken(null);
     setExp(null);
     setUser(null);
     hasInitialized.current = false;
+    router.replace("/(auth)/login");
   };
 
   useEffect(() => {
@@ -159,6 +166,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   useEffect(() => {
     // Lắng nghe sự kiện token hết hạn từ axiosClient
     const handleTokenExpired = async () => {
+      console.log("🔴 Token expired event received");
       setErrorMsg("Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại!");
       setErrorModal(true);
       setTimeout(async () => {

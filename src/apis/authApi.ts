@@ -24,7 +24,7 @@ export const authApi = {
 
   // REFRESH
   refresh: async (data: string) => {
-    const res = await axiosClient.post(`/auth/refresh`, data);
+    const res = await axiosClient.post(`/auth/refresh`, { refreshToken: data });
     return {
       status: res.status,
       data: res.data,
