@@ -55,12 +55,10 @@ export const useAuth = () => {
 
         const decoded = decodeToken(data.accessToken);
         if (decoded) {
-          await AsyncStorage.multiSet([
-            ["tokenExp", decoded.exp.toString()],
-            ["user", JSON.stringify(decoded)],
-          ]);
+          await AsyncStorage.setItem("tokenExp", decoded.exp.toString());
         }
 
+        await getInfo();
       }
       return {
         success: isSuccess,
@@ -79,9 +77,10 @@ export const useAuth = () => {
   // REFRESH
   const refresh = async (payload: string) => {
     try {
+      console.log("useAuth payload", payload);
       const res = await authService.refresh(payload);
-      console.log("payload refresh: ", payload);
       const isSuccess = res.status === 200 || res.status === 201;
+
       if (isSuccess) {
         const data = res.data;
         await AsyncStorage.multiSet([
@@ -91,11 +90,10 @@ export const useAuth = () => {
 
         const decoded = decodeToken(data.accessToken);
         if (decoded) {
-          await AsyncStorage.multiSet([
-            ["tokenExp", decoded.exp.toString()],
-            ["user", JSON.stringify(decoded)],
-          ]);
+          await AsyncStorage.setItem("tokenExp", decoded.exp.toString());
         }
+
+        await getInfo();
       }
 
       return {
@@ -114,5 +112,28 @@ export const useAuth = () => {
     }
   };
 
-  return { register, login, refresh, decodeToken };
+  // GET INFO
+  const getInfo = async () => {
+    try {
+      const res = await authService.getInfo();
+      const isSuccess = res.status === 200 || res.status === 201;
+
+      if (isSuccess) {
+        const data = res.data;
+        await AsyncStorage.setItem("user", JSON.stringify(data));
+      }
+      return {
+        success: isSuccess,
+        data: res.data,
+        message: res.data?.message || "",
+      };
+    } catch (error) {
+      return {
+        success: false,
+        message: "Không thể lấy thông tin tài khoản!",
+      };
+    }
+  };
+
+  return { register, login, refresh, decodeToken, getInfo };
 };
