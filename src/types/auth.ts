@@ -15,6 +15,7 @@ export type LoginReq = {
 
 // Token
 export type DecodedToken = {
+  accountId: string;
   exp: number;
   iat: number;
   [key: string]: any;
