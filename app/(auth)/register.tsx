@@ -183,7 +183,7 @@ const Register = () => {
 
       setSuccessModal(true);
 
-      setTimeout(() => router.replace("/(auth)/login"), 2500);
+      setTimeout(() => router.replace("/(auth)/login"), 3500);
       return;
     }
 
@@ -503,7 +503,6 @@ const Register = () => {
       {/* MODAL */}
       {successModal && (
         <ModalPopup
-          key={`success-${successModal}`}
           visible={successModal}
           mode="toast"
           contentText="Đăng ký thành thông!"

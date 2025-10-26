@@ -116,7 +116,7 @@ const ModalPopup = (props: Props) => {
 
   useEffect(() => {
     if (mode === "toast") {
-      const timer = setTimeout(onClose, 2000);
+      const timer = setTimeout(onClose, 3000);
       return () => clearTimeout(timer);
     }
   }, [mode]);

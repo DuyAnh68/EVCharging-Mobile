@@ -1,6 +1,6 @@
 import { Background } from "@src/components/AppBg";
 import { CustomTab, TabName } from "@src/components/CustomTab";
-import { Tabs } from "expo-router";
+import { router, Tabs } from "expo-router";
 
 export default function TabLayout() {
   return (
@@ -9,16 +9,15 @@ export default function TabLayout() {
         screenOptions={{
           headerShown: false,
           sceneStyle: { backgroundColor: "transparent" },
-          animation: "fade",
         }}
-        tabBar={({ state, navigation }) => {
+        tabBar={({ state }) => {
           const activeRoute = state.routes[state.index];
           return (
             <CustomTab
               activeTab={activeRoute.name as TabName}
               onTabPress={(tab) => {
-                const route = state.routes.find((r) => r.name === tab);
-                if (route) navigation.navigate(tab);
+                if (tab === "index") router.replace("/(tabs)");
+                else router.replace(`/(tabs)/${tab}`);
               }}
             />
           );

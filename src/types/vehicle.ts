@@ -1,16 +1,26 @@
+import { Company } from "@src/types/company";
+import { SubscriptionDetail } from "@src/types/subscription";
+
 export interface Vehicle {
-  user_id: {
-    _id: string;
-    username: string;
-    email: string;
-    status: "active" | "inactive" | string;
-    role: "driver" | "admin" | "manager" | string;
-  };
-  company_id: string | null;
-  plate_number: string;
+  id: string;
+  plateNumber: string;
   model: string;
   batteryCapacity: number;
-  subscription_id: string | null;
-  createdAt: string;
-  updatedAt: string;
+  subscriptionId?: string | null;
+  userId: string;
+  companyId?: string | null;
 }
+
+export interface VehicleDetail extends Vehicle {
+  company?: Company | null;
+  subscription?: SubscriptionDetail | null;
+}
+
+export type VehicleReq = Omit<Vehicle, "id" | "subscriptionId">;
+
+export type VehicleForm = {
+  plateNumber: string;
+  model: string;
+  batteryCapacity: string;
+  subscriptionId?: string | null;
+};

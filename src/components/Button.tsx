@@ -1,7 +1,13 @@
 import { COLORS, TEXTS } from "@src/styles/theme";
 import { StyleSheet, Text, TouchableOpacity } from "react-native";
 
-export type ColorType = "grey" | "red" | "green" | "yellow" | "blue";
+export type ColorType =
+  | "grey"
+  | "red"
+  | "green"
+  | "yellow"
+  | "blue"
+  | "primary";
 
 type Props = {
   text: string;
@@ -37,6 +43,12 @@ const getColors = (type: ColorType) => {
       return {
         backgroundColor: COLORS.info,
         shadowColor: COLORS.infoDark,
+        textColor: TEXTS.white,
+      };
+    case "primary":
+      return {
+        backgroundColor: COLORS.primary,
+        shadowColor: COLORS.primaryDark,
         textColor: TEXTS.white,
       };
     case "grey":

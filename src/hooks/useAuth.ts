@@ -1,4 +1,3 @@
-// hooks/useAuth.ts
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useLoading } from "@src/context/LoadingContext";
 import { authService } from "@src/services/authService";
