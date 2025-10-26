@@ -1,4 +1,5 @@
 import { LoginReq, RegisterReq } from "@src/types/auth";
+import { VehicleForm } from "@src/types/vehicle";
 
 // REGISTER
 export type RegisterForm = RegisterReq & {
@@ -56,4 +57,55 @@ export const validateLogin = (data: LoginReq): LoginErrors => {
   }
 
   return errors;
+};
+
+// VEHICLE
+const validateVietnamPlate = (plateRaw: string): boolean => {
+  if (!plateRaw || typeof plateRaw !== "string") return false;
+
+  const raw = plateRaw.trim().toUpperCase();
+  const normalized = raw
+    .replace(/\s+/g, "")
+    .replace(/[-\s]/g, "-")
+    .replace(/\./g, ".");
+
+  const patterns: RegExp[] = [
+    /^\d{2}[A-Z]{1}-\d{3}\.\d{2}$/, // 30A-123.45
+    /^\d{2}[A-Z]{1}-\d{4}$/, // 30A-1234
+    /^\d{2}[A-Z]{2}-\d{3}\.\d{2}$/, // 12AB-123.45
+    /^\d{2}[A-Z]{2}-\d{4}$/, // 12AB-1234
+  ];
+
+  return patterns.some((re) => re.test(normalized));
+};
+
+export const validateVehicle = (
+  field: keyof VehicleForm,
+  value: string | number | null | undefined
+): string | undefined => {
+  const strValue = value?.toString() ?? "";
+
+  switch (field) {
+    case "model":
+      if (!strValue.trim()) return "Vui lòng nhập hãng xe.";
+      if (strValue.length < 2) return "Tên hãng xe phải có ít nhất 2 ký tự.";
+      break;
+
+    case "plateNumber":
+      if (!strValue.trim()) return "Vui lòng nhập biển số xe.";
+      if (!validateVietnamPlate(strValue))
+        return "Biển số xe không hợp lệ (VD: 30A-123.45 hoặc 29A-1234).";
+      break;
+
+    case "batteryCapacity":
+      if (!strValue.trim()) return "Vui lòng nhập dung lượng pin.";
+      const capacity = Number(strValue);
+      if (isNaN(capacity)) return "Dung lượng pin phải là số.";
+      if (!Number.isInteger(capacity))
+        return "Dung lượng pin phải là số nguyên.";
+      if (capacity <= 0) return "Dung lượng pin phải lớn hơn 0.";
+      break;
+  }
+
+  return undefined;
 };

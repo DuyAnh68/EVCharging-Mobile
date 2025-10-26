@@ -115,14 +115,12 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
           if (info.success) setUser(info.data);
         } else {
           setErrorMsg(res.message || "Phiên đăng nhập đã hết hạn!");
-          setErrorModal(true);
 
           setIsInitializing(false);
           hideLoading();
 
-          setTimeout(async () => {
-            await logout();
-          }, 2500);
+          await logout();
+          setErrorModal(true);
         }
       }
     } catch (err) {
@@ -162,10 +160,8 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     // Lắng nghe sự kiện token hết hạn từ axiosClient
     const handleTokenExpired = async () => {
       setErrorMsg("Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại!");
+      await logout();
       setErrorModal(true);
-      setTimeout(async () => {
-        await logout();
-      }, 2500);
     };
 
     tokenEvents.on("tokenExpired", handleTokenExpired);
