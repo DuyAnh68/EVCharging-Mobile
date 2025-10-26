@@ -11,6 +11,7 @@ export const useAuth = () => {
   // Decode
   const decodeToken = (token: string): DecodedToken | null => {
     try {
+      console.log(jwtDecode<DecodedToken>(token));
       return jwtDecode<DecodedToken>(token);
     } catch (error) {
       console.error("Error decoding token:", error);
@@ -53,8 +54,10 @@ export const useAuth = () => {
         ]);
 
         const decoded = decodeToken(data.accessToken);
+
         if (decoded) {
           await AsyncStorage.setItem("tokenExp", decoded.exp.toString());
+          await AsyncStorage.setItem("userId", decoded.accountId);
         }
 
         await getInfo();
