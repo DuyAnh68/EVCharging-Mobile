@@ -1,20 +1,19 @@
-// hooks/useAuth.ts
 import { useLoading } from "@src/context/LoadingContext";
-import { stationService } from "@src/services/stationService";
+import { vehicleService } from "@src/services/vehicleService";
 import { mapErrorMsg } from "@src/utils/errorMsgMapper";
 
-export const useStation = () => {
+export const useVehicle = () => {
   const { showLoading, hideLoading } = useLoading();
 
-  // Decode
-  const getStations = async () => {
+  const getVehicle = async () => {
     try {
       showLoading();
-      const res = await stationService.getStations();
+      const res = await vehicleService.getVehicles();
       const isSuccess = res.status === 200 || res.status === 201;
+      console.log(res.data);
       return {
         success: isSuccess,
-        stations: res.data,
+        vehicles: res.data,
       };
     } catch (error: any) {
       const message = error.response?.data?.message || error.customMessage;
@@ -22,12 +21,12 @@ export const useStation = () => {
       const viMessage = mapErrorMsg(message, status);
       return {
         success: false,
-        message: viMessage || "Không thể lấy thông tin trạm sạc",
+        message: viMessage || "Không thể lấy thông tin xe",
       };
     } finally {
       hideLoading();
     }
   };
 
-  return { getStations };
+  return { getVehicle };
 };
