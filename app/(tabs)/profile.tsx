@@ -1,14 +1,21 @@
-import {
-  View,
-  Text,
-  StyleSheet,
-  ScrollView,
-  TouchableOpacity,
-  Image,
-} from "react-native";
 import { Ionicons } from "@expo/vector-icons";
+import { useAuthContext } from "@src/context/AuthContext";
+import {
+  Image,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
+} from "react-native";
 
 export default function ProfileScreen() {
+  const { logout } = useAuthContext();
+
+  const handleLogout = async () => {
+    await logout();
+  };
+
   const menuItems = [
     {
       id: 1,
@@ -108,7 +115,7 @@ export default function ProfileScreen() {
         ))}
       </View>
 
-      <TouchableOpacity style={styles.logoutButton}>
+      <TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>
         <Ionicons name="log-out-outline" size={20} color="#FF3B30" />
         <Text style={styles.logoutText}>Đăng xuất</Text>
       </TouchableOpacity>

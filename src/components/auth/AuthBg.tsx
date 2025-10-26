@@ -10,11 +10,26 @@ type BackgroundProps = {
 
 export const Background: React.FC<BackgroundProps> = ({ children }) => {
   const icons = [
-    { name: "leaf", size: 60, x: 0.1, y: 0.1 },
-    { name: "leaf", size: 70, x: 0.7, y: 0.15 },
+    { name: "sun", size: 80, x: 0.12, y: 0.08 },
+    { name: "leaf", size: 60, x: 0.32, y: 0.18 },
+    { name: "cloud", size: 70, x: 0.68, y: 0.1 },
+    { name: "wind", size: 85, x: 0.85, y: 0.22 },
     { name: "drop", size: 50, x: 0.05, y: 0.25 },
-    { name: "wind", size: 80, x: 0.5, y: 0.6 },
-    { name: "drop", size: 50, x: 0.8, y: 0.8 },
+    { name: "leaf", size: 75, x: 0.42, y: 0.35 },
+    { name: "sun", size: 65, x: 0.78, y: 0.38 },
+    { name: "cloud", size: 80, x: 0.58, y: 0.48 },
+    { name: "wind", size: 90, x: 0.25, y: 0.45 },
+    { name: "drop", size: 55, x: 0.9, y: 0.52 },
+    { name: "leaf", size: 65, x: 0.15, y: 0.65 },
+    { name: "sun", size: 70, x: 0.45, y: 0.68 },
+    { name: "cloud", size: 60, x: 0.7, y: 0.6 },
+    { name: "wind", size: 85, x: 0.88, y: 0.72 },
+    { name: "drop", size: 50, x: 0.28, y: 0.78 },
+    { name: "leaf", size: 55, x: 0.58, y: 0.85 },
+    { name: "sun", size: 75, x: 0.12, y: 0.9 },
+    { name: "cloud", size: 65, x: 0.4, y: 0.92 },
+    { name: "wind", size: 90, x: 0.75, y: 0.95 },
+    { name: "drop", size: 60, x: 0.92, y: 0.88 },
   ];
 
   return (

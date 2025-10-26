@@ -1,55 +1,35 @@
-import { Ionicons } from "@expo/vector-icons";
+import { Background } from "@src/components/AppBg";
+import { CustomTab, TabName } from "@src/components/CustomTab";
 import { Tabs } from "expo-router";
 
 export default function TabLayout() {
   return (
-    <Tabs
-      screenOptions={{
-        tabBarActiveTintColor: "#007AFF",
-        tabBarInactiveTintColor: "#8E8E93",
-        tabBarStyle: {
-          backgroundColor: "#FFFFFF",
-          borderTopWidth: 1,
-          borderTopColor: "#E5E5EA",
-          height: 80,
-          paddingTop: 10,
-        },
-        headerStyle: {
-          backgroundColor: "#007AFF",
-        },
-        headerTintColor: "#FFFFFF",
-        headerTitleStyle: {
-          fontWeight: "bold",
-        },
-      }}
-    >
-      <Tabs.Screen
-        name="index"
-        options={{
-          title: "Trang chủ",
-          tabBarIcon: ({ color, size }) => (
-            <Ionicons name="home" size={size} color={color} />
-          ),
+    <Background>
+      <Tabs
+        screenOptions={{
+          headerShown: false,
+          sceneStyle: { backgroundColor: "transparent" },
+          animation: "fade",
         }}
-      />
-      <Tabs.Screen
-        name="stations"
-        options={{
-          title: "Trạm sạc",
-          tabBarIcon: ({ color, size }) => (
-            <Ionicons name="location" size={size} color={color} />
-          ),
+        tabBar={({ state, navigation }) => {
+          const activeRoute = state.routes[state.index];
+          return (
+            <CustomTab
+              activeTab={activeRoute.name as TabName}
+              onTabPress={(tab) => {
+                const route = state.routes.find((r) => r.name === tab);
+                if (route) navigation.navigate(tab);
+              }}
+            />
+          );
         }}
-      />
-      <Tabs.Screen
-        name="profile"
-        options={{
-          title: "Hồ sơ",
-          tabBarIcon: ({ color, size }) => (
-            <Ionicons name="person" size={size} color={color} />
-          ),
-        }}
-      />
-    </Tabs>
+      >
+        <Tabs.Screen name="index" options={{ title: "Đặt chỗ" }} />
+        <Tabs.Screen name="map" options={{ title: "Bản đồ" }} />
+        <Tabs.Screen name="session" options={{ title: "Phiên sạc" }} />
+        <Tabs.Screen name="vehicle" options={{ title: "Danh sách xe" }} />
+        <Tabs.Screen name="profile" options={{ title: "Tài khoản" }} />
+      </Tabs>
+    </Background>
   );
 }

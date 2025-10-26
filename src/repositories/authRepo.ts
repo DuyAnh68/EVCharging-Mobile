@@ -19,4 +19,10 @@ export const authRepo = {
     const res = await authApi.refresh(data);
     return res;
   },
+
+  // Get info
+  getInfo: async () => {
+    const res = await authApi.getInfo();
+    return res;
+  },
 };

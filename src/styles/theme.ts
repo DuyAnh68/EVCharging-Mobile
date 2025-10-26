@@ -91,6 +91,7 @@ export const COLORS = {
   gradient_1: ["#10B981", "#059669", "#047857"] as const,
   gradient_2: ["#064E3B", "#047857", "#10B981", "#34D399", "#6EE7B7"] as const,
   gradient_3: ["#FFFFFF", "#D1FAE5", "#6EE7B7", "#10B981"] as const,
+  gradient_4: ["#F0FDF4", "#E2FAE9", "#D3F0FF", "#EFF6FF"] as const,
 
   /* =========================
      INPUT & FORM COLORS

@@ -5,6 +5,7 @@ import { useLoading } from "@src/context/LoadingContext";
 import { useAuth } from "@src/hooks/useAuth";
 import { User } from "@src/types/user";
 import { tokenEvents } from "@src/utils/tokenEvents";
+import { router } from "expo-router";
 import { createContext, useContext, useEffect, useRef, useState } from "react";
 
 type AuthContextType = {
@@ -19,6 +20,7 @@ type AuthContextType = {
 export const AuthContext = createContext<AuthContextType | null>(null);
 
 export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
+  // State
   const [accessToken, setAccessToken] = useState<string | null>(null);
   const [refreshToken, setRefreshToken] = useState<string | null>(null);
   const [exp, setExp] = useState<number | null>(null);
@@ -27,12 +29,15 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [errorModal, setErrorModal] = useState<boolean>(false);
   const [errorMsg, setErrorMsg] = useState("");
 
-  const { showLoading, hideLoading } = useLoading();
-  const { refresh, decodeToken } = useAuth();
+  // Hook
+  const { showLoading, hideLoading, resetLoading } = useLoading();
+  const { refresh, decodeToken, getInfo } = useAuth();
 
+  // Ref
   const refreshTimeout = useRef<ReturnType<typeof setTimeout> | null>(null);
   const hasInitialized = useRef(false);
 
+  // Auto refresh
   const scheduleAutoRefresh = (exp: number, refreshToken: string) => {
     if (refreshTimeout.current) clearTimeout(refreshTimeout.current);
     const now = Math.floor(Date.now() / 1000);
@@ -56,7 +61,9 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     }
   };
 
+  // Check auth
   const initAuth = async () => {
+    resetLoading();
     if (hasInitialized.current) return;
     hasInitialized.current = true;
 
@@ -64,14 +71,13 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     showLoading();
 
     try {
-      const [storedAccess, storedRefresh, storedUser] =
-        await AsyncStorage.multiGet([
-          "accessToken",
-          "refreshToken",
-          "user",
-        ]).then((res) => res.map(([, v]) => v));
+      const [storedAccess, storedRefresh] = await AsyncStorage.multiGet([
+        "accessToken",
+        "refreshToken",
+      ]).then((res) => res.map(([, v]) => v));
 
       if (!storedAccess || !storedRefresh) {
+        // accessToken, refreshToken đều null
         setAccessToken(null);
         setRefreshToken(null);
         setUser(null);
@@ -84,12 +90,15 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       const now = Math.floor(Date.now() / 1000);
 
       if (decoded?.exp && decoded.exp > now) {
-        console.log("Access token còn hạn, đăng nhập lại người dùng...");
+        // accessToken còn hạn
+        console.log("👌 Access token còn hạn, đăng nhập lại người dùng...");
         setAccessToken(storedAccess);
         setRefreshToken(storedRefresh);
         setExp(decoded.exp);
-        setUser(storedUser ? JSON.parse(storedUser) : decoded);
         scheduleAutoRefresh(decoded.exp, storedRefresh);
+
+        const info = await getInfo();
+        if (info.success) setUser(info.data);
       } else {
         // accessToken hết hạn → thử refresh
         console.log("⚠️ Access token hết hạn, đang thử refresh...");
@@ -102,14 +111,8 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
             setExp(decodedNew.exp);
             scheduleAutoRefresh(decodedNew.exp, res.data.refreshToken);
           }
-          if (decodedNew) {
-            const userData: User = {
-              userId: decodedNew.accountId,
-              role: decodedNew.role,
-            };
-            await AsyncStorage.setItem("user", JSON.stringify(userData));
-            setUser(userData);
-          }
+          const info = await getInfo();
+          if (info.success) setUser(info.data);
         } else {
           setErrorMsg(res.message || "Phiên đăng nhập đã hết hạn!");
           setErrorModal(true);
@@ -130,6 +133,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     }
   };
 
+  // Logout
   const logout = async () => {
     if (refreshTimeout.current) clearTimeout(refreshTimeout.current);
     await AsyncStorage.multiRemove([
@@ -138,11 +142,13 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       "tokenExp",
       "user",
     ]);
+
     setAccessToken(null);
     setRefreshToken(null);
     setExp(null);
     setUser(null);
     hasInitialized.current = false;
+    router.replace("/(auth)/login");
   };
 
   useEffect(() => {
@@ -175,6 +181,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     >
       {!isInitializing && children}
 
+      {/* Modal */}
       {errorModal && (
         <ModalPopup
           visible={errorModal}
