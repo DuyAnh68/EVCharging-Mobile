@@ -5,8 +5,12 @@ export const stationRepo = {
     const res = await stationApi.getStations();
     return res;
   },
-  getStationById: async (id: String) => {
+  getStationById: async (id: string) => {
     const res = await stationApi.getStationById(id);
+    return res;
+  },
+  getChargingPoints: async (stationId: string) => {
+    const res = await stationApi.getChargingPoints(stationId);
     return res;
   },
 };

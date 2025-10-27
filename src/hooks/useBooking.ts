@@ -31,9 +31,13 @@ export const useBooking = () => {
   };
 
   // GET ALL BOOKINGS
-  const getAllBookings = async () => {
+  const getAllBookingsFilterChargingPoints = async (
+    chargingPointId: string
+  ) => {
     try {
-      const res = await bookingService.getAll();
+      const res = await bookingService.getAllFilterChargingPoints(
+        chargingPointId
+      );
       const isSuccess = res.status === 200 || res.status === 201;
       return {
         success: isSuccess,
@@ -116,7 +120,7 @@ export const useBooking = () => {
 
   return {
     createBooking,
-    getAllBookings,
+    getAllBookingsFilterChargingPoints,
     getBookingById,
     updateBooking,
     deleteBooking,

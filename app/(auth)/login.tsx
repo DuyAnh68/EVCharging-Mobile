@@ -2,6 +2,7 @@ import { FontAwesome5 } from "@expo/vector-icons";
 import AntDesign from "@expo/vector-icons/AntDesign";
 import MaterialCommunityIcons from "@expo/vector-icons/MaterialCommunityIcons";
 import ModalPopup from "@src/components/ModalPopup";
+import { useAuthContext } from "@src/context/AuthContext";
 import { useAuth } from "@src/hooks/useAuth";
 import { COLORS, TEXTS } from "@src/styles/theme";
 import { validateLogin } from "@src/utils/validateInput";
@@ -25,6 +26,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 const Login = () => {
   // Hook
   const { login } = useAuth();
+  const { setUser } = useAuthContext();
 
   // State
   const [form, setForm] = useState({
@@ -94,6 +96,7 @@ const Login = () => {
     const res = await login(form);
 
     if (res.success) {
+      setUser(res.user);
       setForm({
         email: "",
         password: "",

@@ -1,5 +1,6 @@
 import axiosClient from "@src/apis/axiosClient";
 import { LoginReq, RegisterReq } from "@src/types/auth";
+import { UserForm } from "@src/types/user";
 
 export const authApi = {
   // REGISTER
@@ -35,6 +36,16 @@ export const authApi = {
   // GET INFO
   getInfo: async () => {
     const res = await axiosClient.get(`/accounts/me`);
+    return {
+      status: res.status,
+      data: res.data,
+      message: res.data?.message,
+    };
+  },
+
+  // UPDATE INFO
+  updateInfo: async (userId: string, data: UserForm) => {
+    const res = await axiosClient.put(`/accounts/${userId}`, data);
     return {
       status: res.status,
       data: res.data,

@@ -32,25 +32,53 @@ type Props = {
 const Form = ({ visible, mode, vehicle, onClose, onSuccess }: Props) => {
   const plans: SubscriptionPlan[] = [
     {
-      id: "plan_monthly",
-      name: "Gói tháng",
-      price: 120000,
-      billingCycle: "Hàng tháng",
-      limitType: "Tối đa 1 phương tiện",
+      id: "basic",
+      name: "Gói Cơ bản",
+      price: 99000,
+      discount: 0,
+      billingCycle: "1 tháng",
+      limitType: "5 lượt sử dụng",
+      description: "Phù hợp cho người mới bắt đầu trải nghiệm dịch vụ.",
+      isActive: true,
+      createdAt: "2025-01-10T08:00:00Z",
+      updatedAt: "2025-02-01T09:30:00Z",
     },
     {
-      id: "plan_quarterly",
-      name: "Gói quý",
-      price: 330000,
-      billingCycle: "Mỗi 3 tháng",
-      limitType: "Tối đa 2 phương tiện",
+      id: "standard",
+      name: "Gói Nâng cao",
+      price: 249000,
+      discount: 10,
+      billingCycle: "3 tháng",
+      limitType: "20 lượt sử dụng",
+      description: "Tiết kiệm hơn, nhiều tiện ích hơn so với gói Cơ bản.",
+      isActive: true,
+      createdAt: "2025-01-15T08:00:00Z",
+      updatedAt: "2025-02-10T10:00:00Z",
     },
     {
-      id: "plan_yearly",
-      name: "Gói năm",
-      price: 1200000,
-      billingCycle: "Hàng năm",
-      limitType: "Không giới hạn phương tiện",
+      id: "premium",
+      name: "Gói Chuyên nghiệp",
+      price: 449000,
+      discount: 15,
+      billingCycle: "6 tháng",
+      limitType: "Không giới hạn lượt sử dụng",
+      description: "Dành cho người dùng chuyên nghiệp với nhu cầu cao.",
+      isActive: true,
+      createdAt: "2025-02-01T08:00:00Z",
+      updatedAt: "2025-02-20T11:00:00Z",
+    },
+    {
+      id: "enterprise",
+      name: "Gói Doanh nghiệp",
+      price: 799000,
+      discount: 20,
+      billingCycle: "12 tháng",
+      limitType: "Không giới hạn + ưu tiên hỗ trợ",
+      description:
+        "Giải pháp toàn diện cho doanh nghiệp, bao gồm hỗ trợ kỹ thuật riêng.",
+      isActive: false,
+      createdAt: "2025-02-10T08:00:00Z",
+      updatedAt: "2025-03-01T09:00:00Z",
     },
   ];
 
@@ -170,14 +198,20 @@ const Form = ({ visible, mode, vehicle, onClose, onSuccess }: Props) => {
   // Render
   const renderSubscriptionItem = ({ item }: { item: SubscriptionPlan }) => {
     const isSelected = selectedSub === item.id;
+    const isDisabled = isUnselectedSub || mode === "edit";
+
+    const handlePress = () => {
+      if (isDisabled) return;
+      handleSelectSub(item.id);
+    };
     return (
       <TouchableOpacity
-        disabled={isUnselectedSub}
-        onPress={() => handleSelectSub(item.id)}
+        activeOpacity={isDisabled ? 0.5 : 0.7}
+        onPress={handlePress}
         style={[
           styles.cardContainer,
           isSelected && styles.selectedCard,
-          isUnselectedSub && { opacity: 0.5 },
+          isDisabled && { opacity: 0.5 },
         ]}
       >
         <Text style={styles.cardTitle}>{item.name}</Text>
@@ -331,25 +365,9 @@ const Form = ({ visible, mode, vehicle, onClose, onSuccess }: Props) => {
 
                 <View style={styles.row}>
                   <TouchableOpacity
-                    onPress={() => {
-                      setIsRenew(!isRenew);
-                    }}
-                    style={[
-                      styles.toggleContainer,
-                      isUnselectedSub && { opacity: 0.5 },
-                    ]}
-                    disabled={isUnselectedSub}
-                  >
-                    <MaterialIcons
-                      name={isRenew ? "check-box" : "check-box-outline-blank"}
-                      size={24}
-                      color={isRenew ? COLORS.primary : COLORS.black}
-                    />
-                    <Text style={styles.toggleText}>Tự gia hạn gói</Text>
-                  </TouchableOpacity>
-                  <TouchableOpacity
                     onPress={handleToggleUnselected}
                     style={styles.toggleContainer}
+                    disabled={mode === "edit"}
                   >
                     <MaterialIcons
                       name={
@@ -395,6 +413,7 @@ const styles = StyleSheet.create({
     borderTopLeftRadius: 20,
     borderTopRightRadius: 20,
     overflow: "hidden",
+    width: "100%",
   },
   headerSection: {
     backgroundColor: COLORS.primary,

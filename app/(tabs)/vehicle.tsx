@@ -3,9 +3,11 @@ import ModalPopup from "@src/components/ModalPopup";
 import Card from "@src/components/vehicle/Card";
 import Detail from "@src/components/vehicle/Detail";
 import Form from "@src/components/vehicle/Form";
+import { useLoading } from "@src/context/LoadingContext";
+import { useVehicle } from "@src/hooks/useVehicle";
 import { COLORS, TEXTS } from "@src/styles/theme";
 import { VehicleDetail } from "@src/types/vehicle";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {
   FlatList,
   StyleSheet,
@@ -17,80 +19,34 @@ import { SafeAreaView } from "react-native-safe-area-context";
 
 export default function VehicleScreen() {
   // State
-  const [vehicles, setVehicles] = useState<VehicleDetail[]>([
-    {
-      id: "68fbd3be0de21c3adfb20677",
-      userId: "user_1",
-      companyId: null,
-      plateNumber: "29A-12345",
-      model: "Tesla Model 3",
-      batteryCapacity: 5000,
-      subscriptionId: null,
-      subscription: undefined,
-    },
-    {
-      id: "68fb06ded2cb18b0a7701d7c",
-      userId: "user_1",
-      companyId: "company_1",
-      plateNumber: "30B-67890",
-      model: "BMW i4",
-      batteryCapacity: 1000,
-      subscriptionId: "sub_123",
-      subscription: {
-        id: "sub_123",
-        startDate: "2024-01-15",
-        endDate: "2025-01-15",
-        status: "active",
-        autoRenew: true,
-        paymentStatus: "paid",
-        plan: {
-          id: "plan_monthly",
-          name: "Gói tháng",
-          price: 299000,
-          billingCycle: "Hàng tháng",
-          limitType: "unlimited",
-        },
-      },
-      company: {
-        id: "company_1",
-        name: "Aer Company",
-        address: "123 Nguyen Hue, HCMC",
-        email: "contact@aer.com",
-      },
-    },
-    {
-      id: "68fb06ded2cb18b0a7701d7d",
-      userId: "user_2",
-      companyId: null,
-      plateNumber: "31C-11111",
-      model: "Vinfast VF8",
-      batteryCapacity: 8000,
-      subscriptionId: "sub_124",
-      subscription: {
-        id: "sub_124",
-        startDate: "2024-06-01",
-        endDate: "2024-12-31",
-        status: "expired",
-        autoRenew: true,
-        paymentStatus: "paid",
-        plan: {
-          id: "plan_yearly",
-          name: "Gói năm",
-          price: 2999000,
-          billingCycle: "Hàng năm",
-          limitType: "unlimited",
-        },
-      },
-    },
-  ]);
+  const [vehicles, setVehicles] = useState<VehicleDetail[]>([]);
   const [showForm, setShowForm] = useState<boolean>(false);
   const [showDetail, setShowDetail] = useState<boolean>(false);
   const [showDelete, setShowDelete] = useState<boolean>(false);
   const [showSuccess, setShowSuccess] = useState<boolean>(false);
   const [successMsg, setSuccessMsg] = useState<string>("");
+  const [showError, setShowError] = useState<boolean>(false);
+  const [errorMsg, setErrorMsg] = useState<string>("");
   const [selectedVehicle, setSelectedVehicle] = useState<VehicleDetail | null>(
     null
   );
+
+  // Hook
+  const { getVehicles } = useVehicle();
+  const { isLoading } = useLoading();
+
+  // Api
+  const fetchVehicles = async () => {
+    const res = await getVehicles();
+
+    if (res.success && res.vehicles) {
+      setVehicles(res.vehicles);
+      return;
+    }
+
+    setErrorMsg(res.message || "Không thể lấy danh sách xe!");
+    setShowError(true);
+  };
 
   // Handle logic
   const handleShowForm = () => {
@@ -107,8 +63,8 @@ export default function VehicleScreen() {
       setSelectedVehicle(null);
     }
 
-    setShowSuccess(true);
     setSuccessMsg(message);
+    setShowSuccess(true);
   };
 
   const handleCloseForm = () => {
@@ -154,6 +110,17 @@ export default function VehicleScreen() {
     setShowSuccess(true);
   };
 
+  const handleConfirmError = () => {
+    fetchVehicles();
+    setShowError(false);
+    setErrorMsg("");
+  };
+
+  // UseEffect
+  useEffect(() => {
+    fetchVehicles();
+  }, []);
+
   // Render card
   const renderVehicleItem = ({ item }: { item: VehicleDetail }) => (
     <Card
@@ -190,13 +157,15 @@ export default function VehicleScreen() {
           scrollEnabled={true}
         />
       ) : (
-        <View style={styles.emptyState}>
-          <Ionicons name="car-sport" size={64} color={COLORS.gray300} />
-          <Text style={styles.emptyTitle}>Chưa có xe nào</Text>
-          <Text style={styles.emptySubtitle}>
-            Thêm xe đầu tiên của bạn để bắt đầu
-          </Text>
-        </View>
+        !isLoading && (
+          <View style={styles.emptyState}>
+            <Ionicons name="car-sport" size={64} color={COLORS.gray500} />
+            <Text style={styles.emptyTitle}>Chưa có xe nào!</Text>
+            <Text style={styles.emptySubtitle}>
+              Thêm xe đầu tiên của bạn để bắt đầu
+            </Text>
+          </View>
+        )
       )}
 
       {/* Form Modal */}
@@ -234,7 +203,7 @@ export default function VehicleScreen() {
           mode="confirm"
           titleText="Xác nhận xóa"
           contentText={`Bạn có muốn xóa xe có biển số "${selectedVehicle.plateNumber}" không?`}
-          icon={<FontAwesome5 name="trash" size={30} color="white" />}
+          icon={<Ionicons name="trash" size={30} color={COLORS.white} />}
           iconBgColor="red"
           confirmBtnText="Xóa"
           confirmBtnColor="red"
@@ -257,6 +226,26 @@ export default function VehicleScreen() {
           onClose={() => {
             setShowSuccess(false);
           }}
+          modalWidth={355}
+        />
+      )}
+
+      {showError && (
+        <ModalPopup
+          visible={showError}
+          mode="confirm"
+          contentText={errorMsg}
+          icon={<FontAwesome5 name="exclamation" size={30} color="white" />}
+          iconBgColor="red"
+          confirmBtnText="Thử lại"
+          confirmBtnColor="blue"
+          cancelBtnText="Đóng"
+          cancelBtnColor="grey"
+          onClose={() => {
+            setShowError(false);
+            setErrorMsg("");
+          }}
+          onConfirm={handleConfirmError}
           modalWidth={355}
         />
       )}

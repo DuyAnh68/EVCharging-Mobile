@@ -2,16 +2,18 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useLoading } from "@src/context/LoadingContext";
 import { authService } from "@src/services/authService";
 import { DecodedToken, LoginReq, RegisterReq } from "@src/types/auth";
+import { UserForm } from "@src/types/user";
 import { mapErrorMsg } from "@src/utils/errorMsgMapper";
 import { jwtDecode } from "jwt-decode";
+import { useState } from "react";
 
 export const useAuth = () => {
   const { showLoading, hideLoading } = useLoading();
+  const [isLoading, setIsLoading] = useState<boolean>(false);
 
   // Decode
   const decodeToken = (token: string): DecodedToken | null => {
     try {
-      console.log(jwtDecode<DecodedToken>(token));
       return jwtDecode<DecodedToken>(token);
     } catch (error) {
       console.error("Error decoding token:", error);
@@ -33,7 +35,7 @@ export const useAuth = () => {
       const message = error.response?.data?.message || error.customMessage;
       const status = error?.response?.status;
       const viMessage = mapErrorMsg(message, status);
-      return { success: false, message: viMessage || "Đăng ký thất bại" };
+      return { success: false, message: viMessage || "Đăng ký thất bại." };
     } finally {
       hideLoading();
     }
@@ -59,11 +61,11 @@ export const useAuth = () => {
           await AsyncStorage.setItem("tokenExp", decoded.exp.toString());
           await AsyncStorage.setItem("userId", decoded.accountId);
         }
-
-        await getInfo();
       }
+      const info = await getInfo();
       return {
         success: isSuccess,
+        user: info.data,
         message: res.data?.message || "",
       };
     } catch (error: any) {
@@ -93,7 +95,6 @@ export const useAuth = () => {
         if (decoded) {
           await AsyncStorage.setItem("tokenExp", decoded.exp.toString());
         }
-
         await getInfo();
       }
 
@@ -123,10 +124,10 @@ export const useAuth = () => {
         const data = res.data;
         await AsyncStorage.setItem("user", JSON.stringify(data));
       }
+
       return {
         success: isSuccess,
         data: res.data,
-        message: res.data?.message || "",
       };
     } catch (error) {
       return {
@@ -136,5 +137,39 @@ export const useAuth = () => {
     }
   };
 
-  return { register, login, refresh, decodeToken, getInfo };
+  // UPDATE INFO
+  const updateInfo = async (userId: string, payload: UserForm) => {
+    try {
+      setIsLoading(true);
+      const res = await authService.updateInfo(userId, payload);
+      const isSuccess = res.status === 200 || res.status === 201;
+
+      if (isSuccess) {
+        const data = res.data;
+        await AsyncStorage.setItem("user", JSON.stringify(data));
+      }
+
+      return {
+        success: isSuccess,
+        data: res.data,
+      };
+    } catch (error: any) {
+      const message = error.response?.data?.message || error.customMessage;
+      const status = error?.response?.status;
+      const viMessage = mapErrorMsg(message, status);
+      return { success: false, message: viMessage || "Cập nhật thất bại." };
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  return {
+    register,
+    login,
+    refresh,
+    decodeToken,
+    getInfo,
+    updateInfo,
+    isLoading,
+  };
 };

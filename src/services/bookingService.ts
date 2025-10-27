@@ -8,8 +8,8 @@ export const bookingService = {
   },
 
   // Get all bookings
-  getAll: async () => {
-    return await bookingRepo.getAll();
+  getAllFilterChargingPoints: async (chargingPointId: string) => {
+    return await bookingRepo.getAllFilterChargingPoints(chargingPointId);
   },
 
   // Get booking by ID

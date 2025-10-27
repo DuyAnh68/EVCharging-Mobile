@@ -11,8 +11,18 @@ export const bookingApi = {
     };
   },
 
-  getAll: async () => {
-    const res = await axiosClient.get(`/bookings`);
+  getAll: async (params?: {
+    user_id?: string;
+    station_id?: string;
+    vehicle_id?: string;
+    chargingPoint_id?: string;
+    status?: string;
+    start_date?: string;
+    end_date?: string;
+    page?: number;
+    limit?: number;
+  }) => {
+    const res = await axiosClient.get(`/bookings`, { params });
     return {
       status: res.status,
       data: res.data,

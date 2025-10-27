@@ -29,7 +29,7 @@ export const useStation = () => {
     }
   };
 
-  const getStationById = async (id: String) => {
+  const getStationById = async (id: string) => {
     try {
       showLoading();
       const res = await stationService.getStationById(id);
@@ -51,5 +51,27 @@ export const useStation = () => {
     }
   };
 
-  return { getStations, getStationById };
+  const getChargingPoints = async (stationId: string) => {
+    try {
+      showLoading();
+      const res = await stationService.getChargingPoints(stationId);
+      const isSuccess = res.status === 200 || res.status === 201;
+      return {
+        success: isSuccess,
+        chargingPoints: res.data,
+      };
+    } catch (error: any) {
+      const message = error.response?.data?.message || error.customMessage;
+      const status = error?.response?.status;
+      const viMessage = mapErrorMsg(message, status);
+      return {
+        success: false,
+        message: viMessage || "Không thể lấy thông tin trụ sạc",
+      };
+    } finally {
+      hideLoading();
+    }
+  };
+
+  return { getStations, getStationById, getChargingPoints };
 };

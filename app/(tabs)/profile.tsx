@@ -1,7 +1,10 @@
-import { Ionicons } from "@expo/vector-icons";
+import { FontAwesome5, Ionicons } from "@expo/vector-icons";
+import ModalPopup from "@src/components/ModalPopup";
+import Info from "@src/components/profile/Info";
 import { useAuthContext } from "@src/context/AuthContext";
+import { COLORS } from "@src/styles/theme";
+import { useState } from "react";
 import {
-  Image,
   ScrollView,
   StyleSheet,
   Text,
@@ -10,168 +13,275 @@ import {
 } from "react-native";
 
 export default function ProfileScreen() {
-  const { logout } = useAuthContext();
+  // Context
+  const { logout, user } = useAuthContext();
+
+  // State
+  const [showInfo, setShowInfo] = useState<boolean>(false);
+  const [showSuccess, setShowSuccess] = useState<boolean>(false);
+  const [successMsg, setSuccessMsg] = useState<string>("");
+  const [showError, setShowError] = useState<boolean>(false);
+  const [errorMsg, setErrorMsg] = useState<string>("");
+
+  // Hanlde logic
+  const handleShowInfo = () => {
+    setShowInfo(true);
+  };
+
+  const handleSuccess = (message: string) => {
+    setSuccessMsg(message);
+    setShowSuccess(true);
+  };
+
+  const handleError = (message: string) => {
+    setErrorMsg(message);
+    setShowError(true);
+  };
+
+  const handleCloseInfo = () => {
+    setShowInfo(false);
+  };
 
   const handleLogout = async () => {
     await logout();
   };
 
+  // Mock
   const menuItems = [
     {
       id: 1,
-      title: "Thông tin cá nhân",
+      title: "Thông tin tài khoản",
       icon: "person-outline",
-      color: "#007AFF",
+      color: COLORS.info,
+      onPress: handleShowInfo,
     },
     {
       id: 2,
-      title: "Lịch sử giao dịch",
-      icon: "receipt-outline",
-      color: "#34C759",
+      title: "Lịch sử sạc",
+      icon: "flash-outline",
+      color: COLORS.success,
+      onPress: handleShowInfo,
     },
     {
       id: 3,
-      title: "Phương thức thanh toán",
+      title: "Lịch sử thanh toán",
       icon: "card-outline",
-      color: "#FF9500",
+      color: COLORS.warningDark,
+      onPress: handleShowInfo,
     },
     {
       id: 4,
-      title: "Thông báo",
-      icon: "notifications-outline",
-      color: "#FF3B30",
+      title: "Lịch sử gói đăng ký",
+      icon: "receipt-outline",
+      color: COLORS.danger,
+      onPress: handleShowInfo,
     },
     {
       id: 5,
       title: "Cài đặt",
       icon: "settings-outline",
-      color: "#8E8E93",
+      color: COLORS.inactiveDark,
+      onPress: handleShowInfo,
     },
-    {
-      id: 6,
-      title: "Trợ giúp & Hỗ trợ",
-      icon: "help-circle-outline",
-      color: "#5856D6",
-    },
+    // {
+    //   id: 6,
+    //   title: "Trợ giúp & Hỗ trợ",
+    //   icon: "help-circle-outline",
+    //   color: "#5856D6",
+    // },
   ];
 
   return (
-    <ScrollView style={styles.container}>
+    <View style={styles.container}>
       <View style={styles.header}>
         <View style={styles.profileInfo}>
           <View style={styles.avatarContainer}>
-            <Image
-              source={{
-                uri: "https://via.placeholder.com/80x80/007AFF/FFFFFF?text=U",
-              }}
-              style={styles.avatar}
-            />
+            <Ionicons name="person" size={50} color={COLORS.black} />
           </View>
           <View style={styles.userInfo}>
-            <Text style={styles.userName}>Nguyễn Văn A</Text>
-            <Text style={styles.userEmail}>nguyenvana@email.com</Text>
-            <Text style={styles.userPhone}>+84 123 456 789</Text>
+            <Text style={styles.userName}>{user?.username}</Text>
+            <Text style={styles.userEmail}>{user?.email}</Text>
+            <Text style={styles.userPhone}>{user?.phone}</Text>
           </View>
         </View>
       </View>
 
-      <View style={styles.statsContainer}>
-        <View style={styles.statItem}>
-          <Text style={styles.statNumber}>15</Text>
-          <Text style={styles.statLabel}>Lần sạc</Text>
+      <ScrollView
+        style={styles.contentContainer}
+        showsVerticalScrollIndicator={false}
+      >
+        <View style={styles.statsContainer}>
+          <View style={styles.statItem}>
+            <Text style={styles.statNumber}>15</Text>
+            <Text style={styles.statLabel}>Lần sạc</Text>
+          </View>
+          <View style={styles.statDivider} />
+          <View style={styles.statItem}>
+            <Text style={styles.statNumber}>2.5h</Text>
+            <Text style={styles.statLabel}>Thời gian sạc</Text>
+          </View>
+          <View style={styles.statDivider} />
+          <View style={styles.statItem}>
+            <Text style={styles.statNumber}>250k</Text>
+            <Text style={styles.statLabel}>Đã tiêu</Text>
+          </View>
         </View>
-        <View style={styles.statDivider} />
-        <View style={styles.statItem}>
-          <Text style={styles.statNumber}>2.5h</Text>
-          <Text style={styles.statLabel}>Thời gian sạc</Text>
-        </View>
-        <View style={styles.statDivider} />
-        <View style={styles.statItem}>
-          <Text style={styles.statNumber}>250k</Text>
-          <Text style={styles.statLabel}>Đã tiêu</Text>
-        </View>
-      </View>
 
-      <View style={styles.menuContainer}>
-        {menuItems.map((item) => (
-          <TouchableOpacity key={item.id} style={styles.menuItem}>
-            <View style={styles.menuItemLeft}>
-              <View
-                style={[
-                  styles.menuIcon,
-                  { backgroundColor: `${item.color}20` },
-                ]}
-              >
-                <Ionicons
-                  name={item.icon as any}
-                  size={24}
-                  color={item.color}
-                />
+        <View style={styles.menuContainer}>
+          {menuItems.map((item) => (
+            <TouchableOpacity
+              key={item.id}
+              style={styles.menuItem}
+              onPress={item.onPress}
+            >
+              <View style={styles.menuItemLeft}>
+                <View
+                  style={[
+                    styles.menuIcon,
+                    { backgroundColor: `${item.color}20` },
+                  ]}
+                >
+                  <Ionicons
+                    name={item.icon as any}
+                    size={24}
+                    color={item.color}
+                  />
+                </View>
+                <Text style={styles.menuTitle}>{item.title}</Text>
               </View>
-              <Text style={styles.menuTitle}>{item.title}</Text>
-            </View>
-            <Ionicons name="chevron-forward" size={20} color="#C7C7CC" />
-          </TouchableOpacity>
-        ))}
-      </View>
+              <Ionicons
+                name="chevron-forward"
+                size={20}
+                color={COLORS.gray300}
+              />
+            </TouchableOpacity>
+          ))}
+        </View>
 
-      <TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>
-        <Ionicons name="log-out-outline" size={20} color="#FF3B30" />
-        <Text style={styles.logoutText}>Đăng xuất</Text>
-      </TouchableOpacity>
-    </ScrollView>
+        <TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>
+          <Ionicons name="log-out-outline" size={20} color={COLORS.danger} />
+          <Text style={styles.logoutText}>Đăng xuất</Text>
+        </TouchableOpacity>
+      </ScrollView>
+
+      {/* Info Modal */}
+      {showInfo && user && (
+        <Info
+          visible={showInfo}
+          user={user}
+          onClose={handleCloseInfo}
+          onSuccess={(message) => {
+            handleSuccess(message);
+          }}
+          onError={(message) => {
+            handleError(message);
+          }}
+        />
+      )}
+
+      {/* Toast Modal */}
+      {showSuccess && (
+        <ModalPopup
+          visible={showSuccess}
+          mode="toast"
+          contentText={successMsg}
+          icon={<FontAwesome5 name="check" size={30} color="white" />}
+          iconBgColor="green"
+          onClose={() => {
+            setShowSuccess(false);
+          }}
+          modalWidth={355}
+        />
+      )}
+
+      {showError && (
+        <ModalPopup
+          visible={showError}
+          mode="noti"
+          contentText={errorMsg}
+          icon={<FontAwesome5 name="exclamation" size={30} color="white" />}
+          iconBgColor="red"
+          confirmBtnText="Đóng"
+          confirmBtnColor="grey"
+          onClose={() => {
+            setShowError(false);
+            setErrorMsg("");
+          }}
+          modalWidth={355}
+        />
+      )}
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#F2F2F7",
+    width: "100%",
+    height: "100%",
+  },
+  overlay: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: "rgba(0,0,0,0.5)",
   },
   header: {
-    backgroundColor: "#FFFFFF",
-    padding: 20,
-    marginBottom: 10,
+    backgroundColor: COLORS.primary,
+    paddingTop: 60,
+    paddingBottom: 20,
   },
   profileInfo: {
     flexDirection: "row",
     alignItems: "center",
   },
   avatarContainer: {
-    marginRight: 15,
+    marginLeft: 20,
+    marginRight: 30,
+    padding: 20,
+    borderRadius: 100,
+    backgroundColor: COLORS.white,
+    justifyContent: "center",
+    alignItems: "center",
+    shadowColor: COLORS.black,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.2,
+    shadowRadius: 6,
+    elevation: 6,
   },
   avatar: {
     width: 80,
     height: 80,
     borderRadius: 40,
   },
-  userInfo: {
-    flex: 1,
-  },
+  userInfo: {},
   userName: {
     fontSize: 24,
     fontWeight: "bold",
-    color: "#000000",
+    color: COLORS.white,
     marginBottom: 5,
   },
   userEmail: {
     fontSize: 16,
-    color: "#8E8E93",
+    color: COLORS.white,
+    fontWeight: "500",
     marginBottom: 3,
   },
   userPhone: {
     fontSize: 16,
-    color: "#8E8E93",
+    color: COLORS.white,
+    fontWeight: "500",
+  },
+  contentContainer: {
+    paddingTop: 15,
   },
   statsContainer: {
-    backgroundColor: "#FFFFFF",
+    backgroundColor: COLORS.white,
     marginHorizontal: 15,
     marginBottom: 10,
     borderRadius: 12,
     padding: 20,
     flexDirection: "row",
     justifyContent: "space-around",
-    shadowColor: "#000",
+    shadowColor: COLORS.black,
     shadowOffset: {
       width: 0,
       height: 2,
@@ -187,7 +297,7 @@ const styles = StyleSheet.create({
   statNumber: {
     fontSize: 24,
     fontWeight: "bold",
-    color: "#007AFF",
+    color: COLORS.secondary,
     marginBottom: 5,
   },
   statLabel: {
@@ -200,11 +310,11 @@ const styles = StyleSheet.create({
     marginHorizontal: 10,
   },
   menuContainer: {
-    backgroundColor: "#FFFFFF",
+    backgroundColor: COLORS.white,
     marginHorizontal: 15,
     borderRadius: 12,
     marginBottom: 20,
-    shadowColor: "#000",
+    shadowColor: COLORS.black,
     shadowOffset: {
       width: 0,
       height: 2,
@@ -240,15 +350,15 @@ const styles = StyleSheet.create({
     fontWeight: "500",
   },
   logoutButton: {
-    backgroundColor: "#FFFFFF",
+    backgroundColor: COLORS.white,
     marginHorizontal: 15,
-    marginBottom: 30,
+    marginBottom: 40,
     borderRadius: 12,
     padding: 20,
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "center",
-    shadowColor: "#000",
+    shadowColor: COLORS.black,
     shadowOffset: {
       width: 0,
       height: 2,
@@ -259,7 +369,7 @@ const styles = StyleSheet.create({
   },
   logoutText: {
     fontSize: 16,
-    color: "#FF3B30",
+    color: COLORS.danger,
     fontWeight: "600",
     marginLeft: 10,
   },

@@ -5,12 +5,11 @@ import { mapErrorMsg } from "@src/utils/errorMsgMapper";
 export const useVehicle = () => {
   const { showLoading, hideLoading } = useLoading();
 
-  const getVehicle = async () => {
+  const getVehicles = async () => {
     try {
       showLoading();
       const res = await vehicleService.getVehicles();
       const isSuccess = res.status === 200 || res.status === 201;
-      console.log(res.data);
       return {
         success: isSuccess,
         vehicles: res.data,
@@ -21,12 +20,12 @@ export const useVehicle = () => {
       const viMessage = mapErrorMsg(message, status);
       return {
         success: false,
-        message: viMessage || "Không thể lấy thông tin xe",
+        message: viMessage || "Không thể lấy danh sách xe!",
       };
     } finally {
       hideLoading();
     }
   };
 
-  return { getVehicle };
+  return { getVehicles };
 };

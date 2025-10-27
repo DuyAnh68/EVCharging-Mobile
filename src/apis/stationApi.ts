@@ -5,8 +5,12 @@ export const stationApi = {
     const res = await axiosClient.get(`/stations`);
     return res;
   },
-  getStationById: async (id: String) => {
+  getStationById: async (id: string) => {
     const res = await axiosClient.get(`/stations/${id}`);
+    return res;
+  },
+  getChargingPoints: async (stationId: string) => {
+    const res = await axiosClient.get(`/stations/${stationId}/charging-points`);
     return res;
   },
 };

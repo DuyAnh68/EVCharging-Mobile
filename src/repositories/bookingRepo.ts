@@ -9,8 +9,8 @@ export const bookingRepo = {
   },
 
   // Get all bookings
-  getAll: async () => {
-    const res = await bookingApi.getAll();
+  getAllFilterChargingPoints: async (chargingPointId: string) => {
+    const res = await bookingApi.getAll({ chargingPoint_id: chargingPointId });
     return res;
   },
 
