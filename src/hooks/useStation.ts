@@ -29,5 +29,27 @@ export const useStation = () => {
     }
   };
 
-  return { getStations };
+  const getStationById = async (id: String) => {
+    try {
+      showLoading();
+      const res = await stationService.getStationById(id);
+      const isSuccess = res.status === 200 || res.status === 201;
+      return {
+        success: isSuccess,
+        station: res.data,
+      };
+    } catch (error: any) {
+      const message = error.response?.data?.message || error.customMessage;
+      const status = error?.response?.status;
+      const viMessage = mapErrorMsg(message, status);
+      return {
+        success: false,
+        message: viMessage || "Không thể lấy thông tin trạm sạc",
+      };
+    } finally {
+      hideLoading();
+    }
+  };
+
+  return { getStations, getStationById };
 };

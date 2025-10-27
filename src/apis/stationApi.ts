@@ -5,4 +5,8 @@ export const stationApi = {
     const res = await axiosClient.get(`/stations`);
     return res;
   },
+  getStationById: async (id: String) => {
+    const res = await axiosClient.get(`/stations/${id}`);
+    return res;
+  },
 };
