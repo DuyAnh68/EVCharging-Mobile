@@ -47,7 +47,6 @@ export default function HomeScreen() {
     const url = Platform.select({
       ios: `${scheme}${station.latitude},${station.longitude}&ll=${station.latitude},${station.longitude}`,
       android: `${scheme}${station.latitude},${station.longitude}(${label})`,
-      web: `${scheme}${station.latitude},${station.longitude}`,
     });
 
     Linking.openURL(url || "");
@@ -64,7 +63,14 @@ export default function HomeScreen() {
     const isOnline = item.status === "online";
 
     return (
-      <TouchableOpacity onPress={() => router.push("/station", item._id)}>
+      <TouchableOpacity
+        onPress={() =>
+          router.push({
+            pathname: "/station/[id]",
+            params: { id: item._id },
+          })
+        }
+      >
         <View style={styles.stationCard}>
           <View style={styles.cardHeader}>
             <View style={styles.headerLeft}>
@@ -149,86 +155,69 @@ export default function HomeScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#F9FAFB",
-  },
-  centerContainer: {
-    flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
-    backgroundColor: "#F9FAFB",
-    padding: 20,
-  },
-  loadingText: {
-    marginTop: 12,
-    fontSize: 16,
-    color: "#6B7280",
-  },
-  errorText: {
-    fontSize: 16,
-    color: "#DC2626",
-    textAlign: "center",
+    backgroundColor: "transparent",
   },
   header: {
-    backgroundColor: "#FFFFFF",
-    padding: 20,
+    backgroundColor: "#3CB371",
     paddingTop: 60,
-    borderBottomWidth: 1,
-    borderBottomColor: "#E5E7EB",
+    paddingHorizontal: 20,
+    paddingBottom: 24,
   },
   headerTitle: {
-    fontSize: 28,
+    fontSize: 24,
     fontWeight: "700",
-    color: "#111827",
-    marginBottom: 4,
+    color: "#FFFFFF",
   },
   headerSubtitle: {
     fontSize: 14,
-    color: "#6B7280",
+    color: "#E0F2E9",
+    marginTop: 4,
   },
   listContainer: {
     padding: 16,
   },
   stationCard: {
     backgroundColor: "#FFFFFF",
-    borderRadius: 12,
-    padding: 16,
-    marginBottom: 12,
+    borderRadius: 16,
+    padding: 18,
+    marginBottom: 14,
+    borderWidth: 1,
+    borderColor: "#D6EADF",
     shadowColor: "#000",
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.05,
-    shadowRadius: 2,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.08,
+    shadowRadius: 3,
     elevation: 2,
   },
   cardHeader: {
     flexDirection: "row",
     justifyContent: "space-between",
-    alignItems: "flex-start",
-    marginBottom: 12,
-  },
-  headerLeft: {
-    flex: 1,
+    alignItems: "center",
+    marginBottom: 8,
   },
   stationName: {
-    fontSize: 17,
-    fontWeight: "600",
+    fontSize: 16,
+    fontWeight: "700",
     color: "#111827",
-    marginBottom: 6,
   },
   statusContainer: {
     flexDirection: "row",
     alignItems: "center",
+    marginTop: 4,
     gap: 6,
   },
   statusText: {
     fontSize: 13,
     fontWeight: "500",
+    color: "#10B981",
   },
   navButton: {
+    backgroundColor: "#E0F2E9",
     padding: 8,
-    backgroundColor: "#EFF6FF",
-    borderRadius: 8,
+    borderRadius: 10,
   },
   cardBody: {
+    marginTop: 10,
     gap: 10,
   },
   infoRow: {
@@ -239,12 +228,13 @@ const styles = StyleSheet.create({
   infoText: {
     flex: 1,
     fontSize: 14,
-    color: "#6B7280",
+    color: "#374151",
     lineHeight: 20,
   },
   detailsRow: {
     flexDirection: "row",
-    gap: 16,
+    justifyContent: "space-between",
+    marginTop: 4,
   },
   detailItem: {
     flexDirection: "row",
@@ -253,16 +243,17 @@ const styles = StyleSheet.create({
   },
   detailText: {
     fontSize: 14,
-    color: "#374151",
+    color: "#111827",
     fontWeight: "500",
   },
   feeRow: {
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
+    marginTop: 12,
     paddingTop: 8,
     borderTopWidth: 1,
-    borderTopColor: "#F3F4F6",
+    borderTopColor: "#E5E7EB",
   },
   feeLabel: {
     fontSize: 13,
@@ -270,7 +261,7 @@ const styles = StyleSheet.create({
   },
   feeValue: {
     fontSize: 14,
-    fontWeight: "600",
+    fontWeight: "700",
     color: "#111827",
   },
 });

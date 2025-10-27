@@ -24,7 +24,6 @@ const StationsMap = ({ stations }: stationsType) => {
     const scheme = Platform.select({
       ios: "maps://0,0?q=",
       android: "geo:0,0?q=",
-      web: "https://www.google.com/maps/search/?api=1&query=",
     });
 
     const label = encodeURIComponent(station.name);
@@ -195,14 +194,16 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
-    padding: 20,
-    borderBottomWidth: 1,
-    borderBottomColor: "#E5E7EB",
+    paddingHorizontal: 20,
+    paddingVertical: 16,
+    backgroundColor: "#52C49E",
+    borderTopLeftRadius: 20,
+    borderTopRightRadius: 20,
   },
   modalTitle: {
     fontSize: 18,
-    fontWeight: "600",
-    color: "#111827",
+    fontWeight: "700",
+    color: "#FFFFFF",
   },
   closeButton: {
     padding: 4,
@@ -253,7 +254,7 @@ const styles = StyleSheet.create({
     color: "#6B7280",
   },
   navigationButton: {
-    backgroundColor: "#3B82F6",
+    backgroundColor: "#52C49E",
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "center",
