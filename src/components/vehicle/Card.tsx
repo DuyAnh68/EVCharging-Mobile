@@ -1,4 +1,9 @@
-import { Entypo, FontAwesome, Ionicons } from "@expo/vector-icons";
+import {
+  Entypo,
+  FontAwesome,
+  Ionicons,
+  MaterialCommunityIcons,
+} from "@expo/vector-icons";
 import { COLORS, TEXTS } from "@src/styles/theme";
 import { VehicleDetail } from "@src/types/vehicle";
 import { formatDateTime } from "@src/utils/format";
@@ -62,25 +67,45 @@ export default function VehicleCard({
 
           {!hasCompany && (
             <View style={styles.actions}>
-              <TouchableOpacity onPress={onEdit} style={styles.actionButton}>
-                <Ionicons name="pencil" size={18} color={COLORS.primary} />
+              <TouchableOpacity
+                onPress={onEdit}
+                style={[
+                  styles.actionButton,
+                  { backgroundColor: COLORS.green50 },
+                ]}
+              >
+                <MaterialCommunityIcons
+                  name="pencil-outline"
+                  size={18}
+                  color={COLORS.primary}
+                />
               </TouchableOpacity>
 
-              <TouchableOpacity onPress={onDelete} style={styles.actionButton}>
-                <Ionicons name="trash" size={18} color={COLORS.danger} />
+              <TouchableOpacity
+                onPress={onDelete}
+                style={[
+                  styles.actionButton,
+                  { backgroundColor: COLORS.dangerLight },
+                ]}
+              >
+                <Ionicons
+                  name="trash-outline"
+                  size={18}
+                  color={COLORS.danger}
+                />
               </TouchableOpacity>
             </View>
           )}
         </View>
 
         <View style={styles.infoRow}>
-          <View style={styles.infoItem}>
+          <View style={[styles.infoItem, { alignItems: "center" }]}>
             <FontAwesome name="battery-full" size={20} color={COLORS.primary} />
             <Text style={styles.infoText}>{vehicle.batteryCapacity} kWh</Text>
           </View>
           {vehicle.company && (
-            <View style={styles.infoItem}>
-              <Ionicons name="business" size={14} color={COLORS.secondary} />
+            <View style={[styles.infoItem, { alignItems: "flex-end" }]}>
+              <Ionicons name="business" size={20} color={COLORS.secondary} />
               <Text style={styles.infoText} numberOfLines={1}>
                 {vehicle.company.name}
               </Text>
@@ -153,6 +178,7 @@ const styles = StyleSheet.create({
   },
   actionButton: {
     padding: 8,
+    borderRadius: 10,
   },
   cardHeader: {
     flexDirection: "row",
@@ -216,7 +242,6 @@ const styles = StyleSheet.create({
   },
   infoItem: {
     flexDirection: "row",
-    alignItems: "center",
     gap: 6,
     flex: 1,
   },

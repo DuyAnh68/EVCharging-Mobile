@@ -1,4 +1,5 @@
 import { LoginReq, RegisterReq } from "@src/types/auth";
+import { UserForm } from "@src/types/user";
 import { VehicleForm } from "@src/types/vehicle";
 
 // REGISTER
@@ -23,8 +24,16 @@ export const validateRegister = (
       break;
     case "phone":
       if (!value.trim()) return "Vui lòng nhập số điện thoại.";
-      if (!/^[0-9]{9,11}$/.test(value))
+      const phone = value.replace(/\s+/g, "");
+
+      if (phone.length < 9 || phone.length > 11)
         return "Số điện thoại có độ dài từ 9 - 11 ký tự.";
+
+      // Kiểm tra định dạng Việt Nam: bắt đầu bằng 0 hoặc +84
+      if (
+        !/^(0|\+84)(3[2-9]|5[2689]|7[06789]|8[1-9]|9[0-9])[0-9]{7}$/.test(phone)
+      )
+        return "Số điện thoại không hợp lệ. Vui lòng nhập đúng định dạng.";
       break;
     case "password":
       if (!value.trim()) return "Vui lòng nhập mật khẩu.";
@@ -107,5 +116,37 @@ export const validateVehicle = (
       break;
   }
 
+  return undefined;
+};
+
+// USER
+export const validateUser = (
+  field: keyof UserForm,
+  value: string
+): string | undefined => {
+  switch (field) {
+    case "username":
+      if (!value.trim()) return "Vui lòng nhập tên người dùng.";
+      if (value.length < 3) return "Tên người dùng phải có ít nhất 3 ký tự.";
+      break;
+    case "email":
+      if (!value.trim()) return "Vui lòng nhập email.";
+      if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value))
+        return "Email không hợp lệ.";
+      break;
+    case "phone":
+      if (!value.trim()) return "Vui lòng nhập số điện thoại.";
+      const phone = value.replace(/\s+/g, "");
+
+      if (phone.length < 9 || phone.length > 11)
+        return "Số điện thoại có độ dài từ 9 - 11 ký tự.";
+
+      // Kiểm tra định dạng Việt Nam: bắt đầu bằng 0 hoặc +84
+      if (
+        !/^(0|\+84)(3[2-9]|5[2689]|7[06789]|8[1-9]|9[0-9])[0-9]{7}$/.test(phone)
+      )
+        return "Số điện thoại không hợp lệ. Vui lòng nhập đúng định dạng.";
+      break;
+  }
   return undefined;
 };

@@ -1,3 +1,4 @@
+import { Portal } from "@gorhom/portal";
 import { COLORS } from "@src/styles/theme";
 import React, {
   createContext,
@@ -44,9 +45,11 @@ export const LoadingProvider = ({ children }: { children: ReactNode }) => {
         {children}
 
         {isLoading && (
-          <View style={styles.overlay} pointerEvents="auto">
-            <ActivityIndicator size="large" color={COLORS.primaryLighter} />
-          </View>
+          <Portal>
+            <View style={styles.overlay} pointerEvents="auto">
+              <ActivityIndicator size="large" color={COLORS.primaryLighter} />
+            </View>
+          </Portal>
         )}
       </View>
     </LoadingContext.Provider>
@@ -63,6 +66,7 @@ export const useLoading = () => {
 
 const styles = StyleSheet.create({
   overlay: {
+    ...StyleSheet.absoluteFillObject,
     position: "absolute",
     top: 0,
     left: 0,
