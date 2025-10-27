@@ -24,7 +24,6 @@ const StationsMap = ({ stations }: stationsType) => {
     const scheme = Platform.select({
       ios: "maps://0,0?q=",
       android: "geo:0,0?q=",
-      web: "https://www.google.com/maps/search/?api=1&query=",
     });
 
     const label = encodeURIComponent(station.name);
