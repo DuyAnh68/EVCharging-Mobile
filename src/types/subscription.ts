@@ -2,10 +2,10 @@ export interface SubscriptionPlan {
   id: string;
   name: string;
   price: number;
-  discount: number;
+  discount?: number | null;
   billingCycle: string;
-  limitType: string;
   description: string;
+  limitType: string;
   isActive: boolean;
   createdAt?: string;
   updatedAt?: string;

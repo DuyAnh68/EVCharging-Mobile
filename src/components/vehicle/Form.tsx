@@ -7,7 +7,6 @@ import { formatVND } from "@src/utils/format";
 import { validateVehicle } from "@src/utils/validateInput";
 import { useEffect, useState } from "react";
 import {
-  FlatList,
   Keyboard,
   Modal,
   Platform,
@@ -20,68 +19,25 @@ import {
   View,
 } from "react-native";
 import { KeyboardAwareScrollView } from "react-native-keyboard-aware-scroll-view";
+import SubPlanModal from "./SubPlanModal";
 
 type Props = {
   visible: boolean;
   mode: "create" | "edit";
   vehicle?: VehicleDetail | null;
+  subPlans: SubscriptionPlan[];
   onClose: () => void;
   onSuccess: (message: string) => void;
 };
 
-const Form = ({ visible, mode, vehicle, onClose, onSuccess }: Props) => {
-  const plans: SubscriptionPlan[] = [
-    {
-      id: "basic",
-      name: "Gói Cơ bản",
-      price: 99000,
-      discount: 0,
-      billingCycle: "1 tháng",
-      limitType: "5 lượt sử dụng",
-      description: "Phù hợp cho người mới bắt đầu trải nghiệm dịch vụ.",
-      isActive: true,
-      createdAt: "2025-01-10T08:00:00Z",
-      updatedAt: "2025-02-01T09:30:00Z",
-    },
-    {
-      id: "standard",
-      name: "Gói Nâng cao",
-      price: 249000,
-      discount: 10,
-      billingCycle: "3 tháng",
-      limitType: "20 lượt sử dụng",
-      description: "Tiết kiệm hơn, nhiều tiện ích hơn so với gói Cơ bản.",
-      isActive: true,
-      createdAt: "2025-01-15T08:00:00Z",
-      updatedAt: "2025-02-10T10:00:00Z",
-    },
-    {
-      id: "premium",
-      name: "Gói Chuyên nghiệp",
-      price: 449000,
-      discount: 15,
-      billingCycle: "6 tháng",
-      limitType: "Không giới hạn lượt sử dụng",
-      description: "Dành cho người dùng chuyên nghiệp với nhu cầu cao.",
-      isActive: true,
-      createdAt: "2025-02-01T08:00:00Z",
-      updatedAt: "2025-02-20T11:00:00Z",
-    },
-    {
-      id: "enterprise",
-      name: "Gói Doanh nghiệp",
-      price: 799000,
-      discount: 20,
-      billingCycle: "12 tháng",
-      limitType: "Không giới hạn + ưu tiên hỗ trợ",
-      description:
-        "Giải pháp toàn diện cho doanh nghiệp, bao gồm hỗ trợ kỹ thuật riêng.",
-      isActive: false,
-      createdAt: "2025-02-10T08:00:00Z",
-      updatedAt: "2025-03-01T09:00:00Z",
-    },
-  ];
-
+const Form = ({
+  visible,
+  mode,
+  vehicle,
+  subPlans,
+  onClose,
+  onSuccess,
+}: Props) => {
   // State
   const [form, setForm] = useState<VehicleForm>({
     model: "",
@@ -93,24 +49,28 @@ const Form = ({ visible, mode, vehicle, onClose, onSuccess }: Props) => {
   const [errors, setErrors] = useState<
     Partial<Record<keyof typeof form, string>>
   >({});
-  const [selectedSub, setSelectedSub] = useState<string | null>(null);
-  const [isUnselectedSub, setIsUnselectedSub] = useState<boolean>(false);
-  const [isRenew, setIsRenew] = useState<boolean>(false);
+  const [selectedPlan, setSelectedPlan] = useState<string | null>(null);
+  const [selectedPlanData, setSelectedPlanData] =
+    useState<SubscriptionPlan | null>(null);
+  const [isUnselectedPlan, setIsUnselectedPlan] = useState<boolean>(false);
   const [isEdit, setIsEdit] = useState<boolean>(false);
+  const [showPlans, setShowPlans] = useState<boolean>(false);
 
   // Handle logic
-  const handleSelectSub = (planId: string) => {
-    // Nếu đang bật "Không đăng ký", thì bỏ chọn
-    if (isUnselectedSub) return;
+  const handleSelectPlan = (planId: string) => {
+    setSelectedPlan(planId);
 
-    // Nếu người dùng click lại vào cùng gói => bỏ chọn
-    setSelectedSub((prev) => (prev === planId ? null : planId));
+    const planData = subPlans.find((p) => p.id === planId);
+    setSelectedPlanData(planData ?? null);
   };
 
   const handleToggleUnselected = () => {
-    setIsUnselectedSub((prev) => {
+    setIsUnselectedPlan((prev) => {
       const newValue = !prev;
-      if (newValue) setSelectedSub(null);
+      if (newValue) {
+        setSelectedPlan(null);
+        setSelectedPlanData(null);
+      }
       return newValue;
     });
   };
@@ -159,9 +119,9 @@ const Form = ({ visible, mode, vehicle, onClose, onSuccess }: Props) => {
       subscriptionId: "",
     });
 
-    setSelectedSub(null);
-    setIsUnselectedSub(false);
-    setIsRenew(false);
+    setSelectedPlan(null);
+    setSelectedPlanData(null);
+    setIsUnselectedPlan(false);
   };
 
   // Check valid
@@ -172,9 +132,9 @@ const Form = ({ visible, mode, vehicle, onClose, onSuccess }: Props) => {
       .filter(([key]) => key !== "subscriptionId")
       .every(([, value]) => (value ?? "").toString().trim() !== "");
 
-    const hasChooseSub = selectedSub !== null || isUnselectedSub;
+    const hasChoosePlan = selectedPlan !== null || isUnselectedPlan;
 
-    return noErrors && allFilled && hasChooseSub && !isEdit;
+    return noErrors && allFilled && hasChoosePlan && !isEdit;
   };
 
   // UseEffect
@@ -187,45 +147,12 @@ const Form = ({ visible, mode, vehicle, onClose, onSuccess }: Props) => {
         subscriptionId: vehicle.subscriptionId || "",
       });
 
-      setSelectedSub(vehicle.subscription?.plan.id || null);
-      setIsUnselectedSub(!vehicle.subscriptionId);
-      setIsRenew(vehicle.subscription?.autoRenew ?? false);
+      setSelectedPlan(vehicle.subscription?.plan.id || null);
+      setIsUnselectedPlan(!vehicle.subscriptionId);
     } else {
       resetForm();
     }
   }, [mode, vehicle]);
-
-  // Render
-  const renderSubscriptionItem = ({ item }: { item: SubscriptionPlan }) => {
-    const isSelected = selectedSub === item.id;
-    const isDisabled = isUnselectedSub || mode === "edit";
-
-    const handlePress = () => {
-      if (isDisabled) return;
-      handleSelectSub(item.id);
-    };
-    return (
-      <TouchableOpacity
-        activeOpacity={isDisabled ? 0.5 : 0.7}
-        onPress={handlePress}
-        style={[
-          styles.cardContainer,
-          isSelected && styles.selectedCard,
-          isDisabled && { opacity: 0.5 },
-        ]}
-      >
-        <Text style={styles.cardTitle}>{item.name}</Text>
-        <View style={styles.infoRow}>
-          <Text style={styles.cardLabel}>Thời hạn:</Text>
-          <Text style={styles.value}>{item.billingCycle}</Text>
-        </View>
-        <View style={styles.infoRow}>
-          <Text style={styles.cardLabel}>Giá:</Text>
-          <Text style={styles.value}>{formatVND(item.price)}</Text>
-        </View>
-      </TouchableOpacity>
-    );
-  };
 
   return (
     <Modal visible={visible} transparent animationType="slide">
@@ -241,7 +168,9 @@ const Form = ({ visible, mode, vehicle, onClose, onSuccess }: Props) => {
         <View style={styles.modalContainer}>
           {/* Header */}
           <View style={styles.headerSection}>
-            <Text style={styles.title}>Thêm phương tiện</Text>
+            <Text style={styles.title}>
+              {mode === "create" ? "Tạo thêm xe" : "Cập nhật xe"}
+            </Text>
             <TouchableOpacity
               onPress={handleClose}
               style={styles.backContainer}
@@ -352,35 +281,125 @@ const Form = ({ visible, mode, vehicle, onClose, onSuccess }: Props) => {
               <View>
                 <Text style={styles.label}>Đăng ký gói</Text>
 
-                <View style={styles.listContainer}>
-                  <FlatList
-                    data={plans}
-                    renderItem={renderSubscriptionItem}
-                    keyExtractor={(item) => item.id}
-                    horizontal
-                    showsHorizontalScrollIndicator={false}
-                    contentContainerStyle={styles.list}
-                  />
-                </View>
+                {mode === "create" && (
+                  <>
+                    {!selectedPlanData ? (
+                      <TouchableOpacity
+                        disabled={isUnselectedPlan}
+                        style={[
+                          styles.subBtnContainer,
+                          isUnselectedPlan && { opacity: 0.5 },
+                        ]}
+                        onPress={() => {
+                          setShowPlans(true);
+                        }}
+                      >
+                        <Text style={[styles.subBtnText]}>Chọn gói</Text>
+                        <Text style={[styles.subBtnText]}>▼</Text>
+                      </TouchableOpacity>
+                    ) : (
+                      <View style={[styles.subContainer, { marginBottom: 8 }]}>
+                        <View
+                          style={[
+                            styles.cardContainer,
+                            {
+                              backgroundColor: COLORS.green50,
+                              width: "100%",
+                            },
+                          ]}
+                        >
+                          <Text style={styles.cardTitle}>
+                            {selectedPlanData.name}
+                          </Text>
+                          <View style={styles.infoRow}>
+                            <Text style={styles.cardLabel}>Thời hạn:</Text>
+                            <Text style={styles.value}>
+                              {selectedPlanData.billingCycle}
+                            </Text>
+                          </View>
+                          <View style={styles.infoRow}>
+                            <Text style={styles.cardLabel}>Giá:</Text>
+                            <Text style={styles.value}>
+                              {formatVND(selectedPlanData.price)}
+                            </Text>
+                          </View>
+                        </View>
+                      </View>
+                    )}
 
-                <View style={styles.row}>
-                  <TouchableOpacity
-                    onPress={handleToggleUnselected}
-                    style={styles.toggleContainer}
-                    disabled={mode === "edit"}
-                  >
-                    <MaterialIcons
-                      name={
-                        isUnselectedSub
-                          ? "check-box"
-                          : "check-box-outline-blank"
-                      }
-                      size={24}
-                      color={isUnselectedSub ? COLORS.primary : COLORS.black}
-                    />
-                    <Text style={styles.toggleText}>Không đăng ký</Text>
-                  </TouchableOpacity>
-                </View>
+                    <View style={styles.row}>
+                      <TouchableOpacity
+                        onPress={handleToggleUnselected}
+                        style={styles.toggleContainer}
+                      >
+                        <MaterialIcons
+                          name={
+                            isUnselectedPlan
+                              ? "check-box"
+                              : "check-box-outline-blank"
+                          }
+                          size={24}
+                          color={
+                            isUnselectedPlan ? COLORS.primary : COLORS.black
+                          }
+                        />
+                        <Text style={styles.toggleText}>Không đăng ký</Text>
+                      </TouchableOpacity>
+                    </View>
+                  </>
+                )}
+
+                {mode === "edit" && (
+                  <>
+                    {vehicle?.subscriptionId ? (
+                      // Có gói → hiển thị card
+                      <View style={styles.subContainer}>
+                        {vehicle?.subscription?.plan && (
+                          <View
+                            style={[
+                              styles.cardContainer,
+                              {
+                                backgroundColor: COLORS.green50,
+                                width: "100%",
+                              },
+                            ]}
+                          >
+                            <Text style={styles.cardTitle}>
+                              {vehicle.subscription.plan.name}
+                            </Text>
+                            <View style={styles.infoRow}>
+                              <Text style={styles.cardLabel}>Thời hạn:</Text>
+                              <Text style={styles.value}>
+                                {vehicle.subscription.plan.billingCycle}
+                              </Text>
+                            </View>
+                            <View style={styles.infoRow}>
+                              <Text style={styles.cardLabel}>Giá:</Text>
+                              <Text style={styles.value}>
+                                {formatVND(vehicle.subscription.plan.price)}
+                              </Text>
+                            </View>
+                          </View>
+                        )}
+                      </View>
+                    ) : (
+                      // Không có gói → hiển thị nút “Không đăng ký”
+                      <View style={styles.row}>
+                        <TouchableOpacity
+                          style={[styles.toggleContainer, { opacity: 0.8 }]}
+                          disabled
+                        >
+                          <MaterialIcons
+                            name="check-box"
+                            size={24}
+                            color={COLORS.primary}
+                          />
+                          <Text style={styles.toggleText}>Không đăng ký</Text>
+                        </TouchableOpacity>
+                      </View>
+                    )}
+                  </>
+                )}
               </View>
 
               <View style={styles.btnContainer}>
@@ -398,6 +417,17 @@ const Form = ({ visible, mode, vehicle, onClose, onSuccess }: Props) => {
           </KeyboardAwareScrollView>
         </View>
       </TouchableWithoutFeedback>
+
+      {showPlans && (
+        <SubPlanModal
+          visible={showPlans}
+          subPlans={subPlans}
+          onSelected={handleSelectPlan}
+          onClose={() => {
+            setShowPlans(false);
+          }}
+        />
+      )}
     </Modal>
   );
 };
@@ -461,9 +491,28 @@ const styles = StyleSheet.create({
     shadowRadius: 4,
     elevation: 3,
   },
-  listContainer: {
-    marginLeft: -10,
+
+  subContainer: {
+    marginTop: 10,
   },
+  subBtnContainer: {
+    marginVertical: 5,
+    padding: 10,
+    borderWidth: 1,
+    borderRadius: 10,
+    borderColor: COLORS.primary,
+    backgroundColor: COLORS.green50,
+    shadowColor: COLORS.primary,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.2,
+    shadowRadius: 4,
+    elevation: 3,
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    width: "50%",
+  },
+  subBtnText: {},
   list: {
     paddingVertical: 15,
     paddingHorizontal: 10,

@@ -1,5 +1,7 @@
+import { SubscriptionPlan } from "@src/types/subscription";
 import { VehicleDetail } from "@src/types/vehicle";
 
+// VEHICLE
 export const toVehicleDetail = (data: any): VehicleDetail => ({
   id: data._id,
   plateNumber: data.plate_number,
@@ -41,4 +43,22 @@ export const toVehicleDetail = (data: any): VehicleDetail => ({
 export const toVehicleListDetail = (data: any): VehicleDetail[] => {
   const list = Array.isArray(data) ? data : data?.vehicles;
   return (list || []).map(toVehicleDetail);
+};
+
+// SUBSCRIPTION PLAN
+export const toSubPlanDetail = (data: any): SubscriptionPlan => ({
+  id: data._id,
+  name: data.name,
+  price: data.price,
+  billingCycle: data.billing_cycle,
+  limitType: data.limit_type,
+  description: data.description,
+  isActive: data.is_active,
+  createdAt: data.createdAt,
+  updatedAt: data.updatedAt,
+});
+
+export const toSubPlanListDetail = (data: any): SubscriptionPlan[] => {
+  const list = Array.isArray(data) ? data : data?.subcriptions;
+  return (list || []).map(toSubPlanDetail);
 };

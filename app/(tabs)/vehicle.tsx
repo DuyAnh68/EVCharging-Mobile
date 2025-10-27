@@ -4,8 +4,10 @@ import Card from "@src/components/vehicle/Card";
 import Detail from "@src/components/vehicle/Detail";
 import Form from "@src/components/vehicle/Form";
 import { useLoading } from "@src/context/LoadingContext";
+import { useSubscription } from "@src/hooks/useSubscription";
 import { useVehicle } from "@src/hooks/useVehicle";
 import { COLORS, TEXTS } from "@src/styles/theme";
+import { SubscriptionPlan } from "@src/types/subscription";
 import { VehicleDetail } from "@src/types/vehicle";
 import { useEffect, useState } from "react";
 import {
@@ -20,6 +22,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 export default function VehicleScreen() {
   // State
   const [vehicles, setVehicles] = useState<VehicleDetail[]>([]);
+  const [subPlans, setSubPlans] = useState<SubscriptionPlan[]>([]);
   const [showForm, setShowForm] = useState<boolean>(false);
   const [showDetail, setShowDetail] = useState<boolean>(false);
   const [showDelete, setShowDelete] = useState<boolean>(false);
@@ -33,6 +36,7 @@ export default function VehicleScreen() {
 
   // Hook
   const { getVehicles } = useVehicle();
+  const { getSubPlans } = useSubscription();
   const { isLoading } = useLoading();
 
   // Api
@@ -45,6 +49,18 @@ export default function VehicleScreen() {
     }
 
     setErrorMsg(res.message || "Không thể lấy danh sách xe!");
+    setShowError(true);
+  };
+
+  const fetchSubPlans = async () => {
+    const res = await getSubPlans();
+
+    if (res.success && res.subscriptions) {
+      setSubPlans(res.subscriptions);
+      return;
+    }
+
+    setErrorMsg(res.message || "Không thể lấy danh sách gói đăng ký!");
     setShowError(true);
   };
 
@@ -119,6 +135,7 @@ export default function VehicleScreen() {
   // UseEffect
   useEffect(() => {
     fetchVehicles();
+    fetchSubPlans();
   }, []);
 
   // Render card
@@ -176,6 +193,7 @@ export default function VehicleScreen() {
             visible={showForm}
             mode={selectedVehicle ? "edit" : "create"}
             vehicle={selectedVehicle}
+            subPlans={subPlans}
             onClose={handleCloseForm}
             onSuccess={(message) => {
               handleSuccess(message);
