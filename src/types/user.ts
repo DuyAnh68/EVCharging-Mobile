@@ -8,3 +8,8 @@ export interface User {
   createdAt?: string;
   updatedAt?: string;
 }
+
+export type UserForm = Omit<
+  User,
+  "userId" | "role" | "status" | "createdAt" | "updatedAt"
+>;

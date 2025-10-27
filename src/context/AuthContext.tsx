@@ -15,6 +15,7 @@ type AuthContextType = {
   user: User | null;
   isInitializing: boolean;
   logout: () => Promise<void>;
+  setUser: (user: User | null) => void;
 };
 
 export const AuthContext = createContext<AuthContextType | null>(null);
@@ -55,7 +56,14 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
             scheduleAutoRefresh(decoded.exp, res.data.refreshToken);
           }
         } else {
-          await logout();
+          setErrorMsg(
+            res.message || "Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại!"
+          );
+          setErrorModal(true);
+
+          setTimeout(async () => {
+            await logout();
+          }, 3500);
         }
       }, refreshTime);
     }
@@ -98,7 +106,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         scheduleAutoRefresh(decoded.exp, storedRefresh);
 
         const info = await getInfo();
-        if (info.success) setUser(info.data);
+        if (info.success && info.data) setUser(info.data);
       } else {
         // accessToken hết hạn → thử refresh
         console.log("⚠️ Access token hết hạn, đang thử refresh...");
@@ -112,15 +120,17 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
             scheduleAutoRefresh(decodedNew.exp, res.data.refreshToken);
           }
           const info = await getInfo();
-          if (info.success) setUser(info.data);
+          if (info.success && info.data) setUser(info.data);
         } else {
           setErrorMsg(res.message || "Phiên đăng nhập đã hết hạn!");
+          setErrorModal(true);
 
           setIsInitializing(false);
           hideLoading();
 
-          await logout();
-          setErrorModal(true);
+          setTimeout(async () => {
+            await logout();
+          }, 3500);
         }
       }
     } catch (err) {
@@ -160,8 +170,10 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     // Lắng nghe sự kiện token hết hạn từ axiosClient
     const handleTokenExpired = async () => {
       setErrorMsg("Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại!");
-      await logout();
       setErrorModal(true);
+      setTimeout(async () => {
+        await logout();
+      }, 3500);
     };
 
     tokenEvents.on("tokenExpired", handleTokenExpired);
@@ -173,11 +185,18 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
   return (
     <AuthContext.Provider
-      value={{ accessToken, refreshToken, exp, user, logout, isInitializing }}
+      value={{
+        accessToken,
+        refreshToken,
+        exp,
+        user,
+        setUser,
+        logout,
+        isInitializing,
+      }}
     >
       {!isInitializing && children}
 
-      {/* Modal */}
       {errorModal && (
         <ModalPopup
           visible={errorModal}
