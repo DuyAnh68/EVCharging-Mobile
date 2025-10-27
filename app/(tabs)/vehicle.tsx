@@ -3,6 +3,7 @@ import ModalPopup from "@src/components/ModalPopup";
 import Card from "@src/components/vehicle/Card";
 import Detail from "@src/components/vehicle/Detail";
 import Form from "@src/components/vehicle/Form";
+import { useLoading } from "@src/context/LoadingContext";
 import { useVehicle } from "@src/hooks/useVehicle";
 import { COLORS, TEXTS } from "@src/styles/theme";
 import { VehicleDetail } from "@src/types/vehicle";
@@ -32,6 +33,7 @@ export default function VehicleScreen() {
 
   // Hook
   const { getVehicles } = useVehicle();
+  const { isLoading } = useLoading();
 
   // Api
   const fetchVehicles = async () => {
@@ -155,13 +157,15 @@ export default function VehicleScreen() {
           scrollEnabled={true}
         />
       ) : (
-        <View style={styles.emptyState}>
-          <Ionicons name="car-sport" size={64} color={COLORS.gray500} />
-          <Text style={styles.emptyTitle}>Chưa có xe nào!</Text>
-          <Text style={styles.emptySubtitle}>
-            Thêm xe đầu tiên của bạn để bắt đầu
-          </Text>
-        </View>
+        !isLoading && (
+          <View style={styles.emptyState}>
+            <Ionicons name="car-sport" size={64} color={COLORS.gray500} />
+            <Text style={styles.emptyTitle}>Chưa có xe nào!</Text>
+            <Text style={styles.emptySubtitle}>
+              Thêm xe đầu tiên của bạn để bắt đầu
+            </Text>
+          </View>
+        )
       )}
 
       {/* Form Modal */}

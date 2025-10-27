@@ -1,11 +1,12 @@
+import { FontAwesome5 } from "@expo/vector-icons";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import ModalPopup from "@src/components/ModalPopup";
 import { useLoading } from "@src/context/LoadingContext";
 import { useAuth } from "@src/hooks/useAuth";
 import { User } from "@src/types/user";
 import { tokenEvents } from "@src/utils/tokenEvents";
 import { router } from "expo-router";
 import { createContext, useContext, useEffect, useRef, useState } from "react";
-import { useErrorModal } from "./ErrorModalContext";
 
 type AuthContextType = {
   accessToken: string | null;
@@ -26,11 +27,12 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [exp, setExp] = useState<number | null>(null);
   const [user, setUser] = useState<User | null>(null);
   const [isInitializing, setIsInitializing] = useState<boolean>(true);
+  const [errorModal, setErrorModal] = useState<boolean>(false);
+  const [errorMsg, setErrorMsg] = useState("");
 
   // Hook
   const { showLoading, hideLoading, resetLoading } = useLoading();
   const { refresh, decodeToken, getInfo } = useAuth();
-  const { showError } = useErrorModal();
 
   // Ref
   const refreshTimeout = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -54,7 +56,14 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
             scheduleAutoRefresh(decoded.exp, res.data.refreshToken);
           }
         } else {
-          await logout();
+          setErrorMsg(
+            res.message || "Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại!"
+          );
+          setErrorModal(true);
+
+          setTimeout(async () => {
+            await logout();
+          }, 3500);
         }
       }, refreshTime);
     }
@@ -113,11 +122,15 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
           const info = await getInfo();
           if (info.success && info.data) setUser(info.data);
         } else {
+          setErrorMsg(res.message || "Phiên đăng nhập đã hết hạn!");
+          setErrorModal(true);
+
           setIsInitializing(false);
           hideLoading();
 
-          await logout();
-          showError(res.message || "Phiên đăng nhập đã hết hạn!");
+          setTimeout(async () => {
+            await logout();
+          }, 3500);
         }
       }
     } catch (err) {
@@ -156,8 +169,11 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   useEffect(() => {
     // Lắng nghe sự kiện token hết hạn từ axiosClient
     const handleTokenExpired = async () => {
-      await logout();
-      showError("Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại!");
+      setErrorMsg("Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại!");
+      setErrorModal(true);
+      setTimeout(async () => {
+        await logout();
+      }, 3500);
     };
 
     tokenEvents.on("tokenExpired", handleTokenExpired);
@@ -180,6 +196,21 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       }}
     >
       {!isInitializing && children}
+
+      {errorModal && (
+        <ModalPopup
+          visible={errorModal}
+          mode="toast"
+          contentText={errorMsg}
+          icon={<FontAwesome5 name="exclamation" size={30} color="white" />}
+          iconBgColor="yellow"
+          onClose={() => {
+            setErrorModal(false);
+            setErrorMsg("");
+          }}
+          modalWidth={355}
+        />
+      )}
     </AuthContext.Provider>
   );
 };
