@@ -108,11 +108,20 @@ export const validateVehicle = (
 
     case "batteryCapacity":
       if (!strValue.trim()) return "Vui lòng nhập dung lượng pin.";
-      const capacity = Number(strValue);
+
+      // Làm sạch chuỗi nhập vào (thay , thành .)
+      const normalized = strValue.replace(",", ".");
+
+      // Kiểm tra có phải số hợp lệ không
+      const capacity = Number(normalized);
       if (isNaN(capacity)) return "Dung lượng pin phải là số.";
-      if (!Number.isInteger(capacity))
-        return "Dung lượng pin phải là số nguyên.";
+
       if (capacity <= 0) return "Dung lượng pin phải lớn hơn 0.";
+
+      // Kiểm tra đúng định dạng số (vd: 1, 1.5, 2.75)
+      if (!/^\d+(\.\d+)?$/.test(normalized))
+        return "Dung lượng pin không hợp lệ. Ví dụ: 1.5 hoặc 2";
+
       break;
   }
 

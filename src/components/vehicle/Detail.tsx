@@ -1,7 +1,7 @@
 import { Ionicons } from "@expo/vector-icons";
 import { COLORS, TEXTS } from "@src/styles/theme";
 import { VehicleDetail } from "@src/types/vehicle";
-import { formatDateTime, formatVND } from "@src/utils/format";
+import { formatDateTime, formatDuration, formatVND } from "@src/utils/format";
 import { useEffect, useState } from "react";
 import {
   Modal,
@@ -76,7 +76,7 @@ const Detail = ({ visible, vehicle, onClose }: Props) => {
                 <View style={[styles.detailItem, { borderBottomWidth: 0 }]}>
                   <Text style={styles.detailLabel}>Dung lượng pin</Text>
                   <Text style={styles.detailValue}>
-                    {vehicle.batteryCapacity} mAh
+                    {vehicle.batteryCapacity} kW
                   </Text>
                 </View>
               </View>
@@ -100,20 +100,22 @@ const Detail = ({ visible, vehicle, onClose }: Props) => {
                   </View>
 
                   <View style={styles.detailItem}>
+                    <Text style={styles.detailLabel}>Giảm giá</Text>
+                    <Text style={styles.detailValue}>
+                      {vehicle.subscription.plan.discount}
+                    </Text>
+                  </View>
+
+                  <View style={styles.detailItem}>
                     <Text style={styles.detailLabel}>Thời hạn</Text>
                     <Text style={styles.detailValue}>
-                      {vehicle.subscription.plan.billingCycle}
+                      {formatDuration(vehicle.subscription.plan.billingCycle)}
                     </Text>
                   </View>
 
                   <View style={styles.detailItem}>
                     <Text style={styles.detailLabel}>Ngày bắt đầu</Text>
                     <Text style={styles.detailValue}>{startDate}</Text>
-                  </View>
-
-                  <View style={styles.detailItem}>
-                    <Text style={styles.detailLabel}>Ngày kết thúc</Text>
-                    <Text style={styles.detailValue}>{endDate}</Text>
                   </View>
 
                   <View
@@ -123,10 +125,8 @@ const Detail = ({ visible, vehicle, onClose }: Props) => {
                       { borderBottomWidth: 0 },
                     ]}
                   >
-                    <Text style={styles.detailLabel}>Tự động gia hạn</Text>
-                    <Text style={styles.detailValue}>
-                      {vehicle.subscription.autoRenew ? "Có" : "Không"}
-                    </Text>
+                    <Text style={styles.detailLabel}>Ngày kết thúc</Text>
+                    <Text style={styles.detailValue}>{endDate}</Text>
                   </View>
                 </View>
               )}

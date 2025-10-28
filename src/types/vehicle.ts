@@ -16,7 +16,12 @@ export interface VehicleDetail extends Vehicle {
   subscription?: SubscriptionDetail | null;
 }
 
-export type VehicleReq = Omit<Vehicle, "id" | "subscriptionId">;
+export type VehicleReq = {
+  user_id: string;
+  model: string;
+  plate_number: string;
+  batteryCapacity: number;
+};
 
 export type VehicleForm = {
   plateNumber: string;
@@ -24,3 +29,18 @@ export type VehicleForm = {
   batteryCapacity: string;
   subscriptionId?: string | null;
 };
+
+type CreateVehicleSuccess = {
+  success: true;
+  vehicle: any;
+  subscription?: any;
+};
+
+type CreateVehicleError = {
+  success: false;
+  step: "createVehicle" | "createSubscription" | "unknown";
+  message: string;
+  vehicle?: any;
+};
+
+export type CreateVehicleResponse = CreateVehicleSuccess | CreateVehicleError;

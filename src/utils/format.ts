@@ -15,3 +15,14 @@ export const formatVND = (amount: number): string => {
 
   return `${amount.toLocaleString("vi-VN")} VND`;
 };
+
+const durationMap: Record<string, string> = {
+  "1 month": "1 tháng",
+  "3 months": "3 tháng",
+  "6 months": "6 tháng",
+  "1 year": "1 năm",
+};
+
+export const formatDuration = (duration: string): string => {
+  return durationMap[duration.toLowerCase()] || duration;
+};
