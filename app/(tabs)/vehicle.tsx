@@ -1,11 +1,15 @@
 import { FontAwesome5, Ionicons } from "@expo/vector-icons";
+import LoadingOverlay from "@src/components/LoadingOverlay";
 import ModalPopup from "@src/components/ModalPopup";
 import Card from "@src/components/vehicle/Card";
 import Detail from "@src/components/vehicle/Detail";
 import Form from "@src/components/vehicle/Form";
+import { useAuthContext } from "@src/context/AuthContext";
 import { useLoading } from "@src/context/LoadingContext";
+import { useSubscription } from "@src/hooks/useSubscription";
 import { useVehicle } from "@src/hooks/useVehicle";
 import { COLORS, TEXTS } from "@src/styles/theme";
+import { SubscriptionPlan } from "@src/types/subscription";
 import { VehicleDetail } from "@src/types/vehicle";
 import { useEffect, useState } from "react";
 import {
@@ -20,6 +24,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 export default function VehicleScreen() {
   // State
   const [vehicles, setVehicles] = useState<VehicleDetail[]>([]);
+  const [subPlans, setSubPlans] = useState<SubscriptionPlan[]>([]);
   const [showForm, setShowForm] = useState<boolean>(false);
   const [showDetail, setShowDetail] = useState<boolean>(false);
   const [showDelete, setShowDelete] = useState<boolean>(false);
@@ -32,8 +37,13 @@ export default function VehicleScreen() {
   );
 
   // Hook
-  const { getVehicles } = useVehicle();
+  const {
+    getVehicles,
+    deleteVehicle,
+  } = useVehicle();
+  const { getSubPlans } = useSubscription();
   const { isLoading } = useLoading();
+  const { user } = useAuthContext();
 
   // Api
   const fetchVehicles = async () => {
@@ -46,6 +56,22 @@ export default function VehicleScreen() {
 
     setErrorMsg(res.message || "Không thể lấy danh sách xe!");
     setShowError(true);
+  };
+
+  const fetchSubPlans = async () => {
+    const res = await getSubPlans();
+
+    if (res.success && res.subscriptions) {
+      setSubPlans(res.subscriptions);
+      return;
+    }
+
+    setErrorMsg(res.message || "Không thể lấy danh sách gói đăng ký!");
+    setShowError(true);
+  };
+
+  const fetchData = async () => {
+    await Promise.allSettled([fetchVehicles(), fetchSubPlans()]);
   };
 
   // Handle logic
@@ -65,6 +91,15 @@ export default function VehicleScreen() {
 
     setSuccessMsg(message);
     setShowSuccess(true);
+
+    setTimeout(() => {
+      fetchData();
+    }, 3100);
+  };
+
+  const handleError = (message: string) => {
+    setErrorMsg(message);
+    setShowError(true);
   };
 
   const handleCloseForm = () => {
@@ -100,14 +135,21 @@ export default function VehicleScreen() {
     setShowDelete(false);
   };
 
-  const handleDelete = () => {
-    console.log("Xóa xe", selectedVehicle?.plateNumber);
-    if (setSelectedVehicle) {
-      setSelectedVehicle(null);
-    }
-    setSuccessMsg("Đã xóa thành công!");
+  const handleDelete = async () => {
+    if (!selectedVehicle) return;
     setShowDelete(false);
-    setShowSuccess(true);
+    const res = await deleteVehicle(selectedVehicle?.id);
+
+    if (res.success) {
+      setSelectedVehicle(null);
+      setSuccessMsg("Đã xóa thành công!");
+      setShowSuccess(true);
+      fetchData();
+      return;
+    }
+
+    setErrorMsg(res.message || "Xóa xe thất bại!");
+    setShowError(true);
   };
 
   const handleConfirmError = () => {
@@ -118,7 +160,7 @@ export default function VehicleScreen() {
 
   // UseEffect
   useEffect(() => {
-    fetchVehicles();
+    fetchData();
   }, []);
 
   // Render card
@@ -133,6 +175,7 @@ export default function VehicleScreen() {
 
   return (
     <SafeAreaView style={styles.container} edges={["left", "right"]}>
+
       {/* Header */}
       <View style={styles.headerSection}>
         <View>
@@ -175,11 +218,14 @@ export default function VehicleScreen() {
           <Form
             visible={showForm}
             mode={selectedVehicle ? "edit" : "create"}
+            userId={user?.userId || ""}
             vehicle={selectedVehicle}
+            subPlans={subPlans}
             onClose={handleCloseForm}
             onSuccess={(message) => {
               handleSuccess(message);
             }}
+            onError={handleError}
           />
         </>
       )}
