@@ -72,6 +72,8 @@ const Session = () => {
     fetchMyBooking();
   };
 
+  console.log("my booking", myBooking);
+
   const Header = () => (
     <LinearGradient
       colors={[COLORS.primary, COLORS.primaryDark]}
@@ -138,7 +140,7 @@ const Session = () => {
   const renderItem = ({ item }: { item: BookingItem }) => {
     const statusConfig = getStatusConfig(item.status);
     const StatusIcon = statusConfig.icon;
-
+    if (item?.vehicle_id === null) return;
     return (
       <TouchableOpacity
         activeOpacity={0.7}

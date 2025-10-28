@@ -19,6 +19,7 @@ import {
 export default function BookingScreen() {
   const { stationId, vehicleId, booking, chargingPoint } =
     useLocalSearchParams();
+  console.log(vehicleId);
   const { createBooking } = useBooking();
   const { user } = useAuthContext();
   console.log(booking);
