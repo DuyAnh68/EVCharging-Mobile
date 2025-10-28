@@ -122,8 +122,6 @@ export const useVehicle = () => {
         batteryCapacity: payload.batteryCapacity,
       });
 
-      console.log("vehiclePayload", vehiclePayload);
-
       const resVehicle = await vehicleService.update(
         payload.vehicleId,
         vehiclePayload
