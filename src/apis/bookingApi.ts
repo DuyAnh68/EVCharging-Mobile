@@ -11,6 +11,15 @@ export const bookingApi = {
     };
   },
 
+  getAllMyBooking: async () => {
+    const res = await axiosClient.get("/bookings/me");
+    return {
+      status: res.status,
+      data: res.data,
+      message: res.data?.message,
+    };
+  },
+
   getAll: async (params?: {
     user_id?: string;
     station_id?: string;

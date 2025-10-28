@@ -14,6 +14,11 @@ export const bookingRepo = {
     return res;
   },
 
+  getAllMyBooking: async () => {
+    const res = await bookingApi.getAllMyBooking();
+    return res;
+  },
+
   // Get booking by ID
   getById: async (id: string) => {
     const res = await bookingApi.getById(id);
