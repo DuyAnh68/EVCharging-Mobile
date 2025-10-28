@@ -1,8 +1,10 @@
 import { FontAwesome5, Ionicons } from "@expo/vector-icons";
+import LoadingOverlay from "@src/components/LoadingOverlay";
 import ModalPopup from "@src/components/ModalPopup";
 import Card from "@src/components/vehicle/Card";
 import Detail from "@src/components/vehicle/Detail";
 import Form from "@src/components/vehicle/Form";
+import { useAuthContext } from "@src/context/AuthContext";
 import { useLoading } from "@src/context/LoadingContext";
 import { useSubscription } from "@src/hooks/useSubscription";
 import { useVehicle } from "@src/hooks/useVehicle";
@@ -35,9 +37,13 @@ export default function VehicleScreen() {
   );
 
   // Hook
-  const { getVehicles } = useVehicle();
+  const {
+    getVehicles,
+    deleteVehicle,
+  } = useVehicle();
   const { getSubPlans } = useSubscription();
   const { isLoading } = useLoading();
+  const { user } = useAuthContext();
 
   // Api
   const fetchVehicles = async () => {
@@ -64,6 +70,10 @@ export default function VehicleScreen() {
     setShowError(true);
   };
 
+  const fetchData = async () => {
+    await Promise.allSettled([fetchVehicles(), fetchSubPlans()]);
+  };
+
   // Handle logic
   const handleShowForm = () => {
     setShowForm(true);
@@ -81,6 +91,15 @@ export default function VehicleScreen() {
 
     setSuccessMsg(message);
     setShowSuccess(true);
+
+    setTimeout(() => {
+      fetchData();
+    }, 3100);
+  };
+
+  const handleError = (message: string) => {
+    setErrorMsg(message);
+    setShowError(true);
   };
 
   const handleCloseForm = () => {
@@ -116,14 +135,21 @@ export default function VehicleScreen() {
     setShowDelete(false);
   };
 
-  const handleDelete = () => {
-    console.log("Xóa xe", selectedVehicle?.plateNumber);
-    if (setSelectedVehicle) {
-      setSelectedVehicle(null);
-    }
-    setSuccessMsg("Đã xóa thành công!");
+  const handleDelete = async () => {
+    if (!selectedVehicle) return;
     setShowDelete(false);
-    setShowSuccess(true);
+    const res = await deleteVehicle(selectedVehicle?.id);
+
+    if (res.success) {
+      setSelectedVehicle(null);
+      setSuccessMsg("Đã xóa thành công!");
+      setShowSuccess(true);
+      fetchData();
+      return;
+    }
+
+    setErrorMsg(res.message || "Xóa xe thất bại!");
+    setShowError(true);
   };
 
   const handleConfirmError = () => {
@@ -134,8 +160,7 @@ export default function VehicleScreen() {
 
   // UseEffect
   useEffect(() => {
-    fetchVehicles();
-    fetchSubPlans();
+    fetchData();
   }, []);
 
   // Render card
@@ -150,6 +175,7 @@ export default function VehicleScreen() {
 
   return (
     <SafeAreaView style={styles.container} edges={["left", "right"]}>
+
       {/* Header */}
       <View style={styles.headerSection}>
         <View>
@@ -192,12 +218,14 @@ export default function VehicleScreen() {
           <Form
             visible={showForm}
             mode={selectedVehicle ? "edit" : "create"}
+            userId={user?.userId || ""}
             vehicle={selectedVehicle}
             subPlans={subPlans}
             onClose={handleCloseForm}
             onSuccess={(message) => {
               handleSuccess(message);
             }}
+            onError={handleError}
           />
         </>
       )}

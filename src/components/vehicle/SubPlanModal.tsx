@@ -2,7 +2,7 @@ import { Ionicons } from "@expo/vector-icons";
 import Button from "@src/components/Button";
 import { COLORS, TEXTS } from "@src/styles/theme";
 import { SubscriptionPlan } from "@src/types/subscription";
-import { formatVND } from "@src/utils/format";
+import { formatDuration, formatVND } from "@src/utils/format";
 import { useState } from "react";
 import {
   FlatList,
@@ -63,19 +63,17 @@ const SubPlanModal = ({ visible, subPlans, onSelected, onClose }: Props) => {
           <Text style={styles.value}>{formatVND(item.price)}</Text>
         </View>
 
-        {item.discount && item.discount > 0 && (
-          <View style={styles.infoRow}>
-            <Text style={styles.cardLabel}>Giảm giá:</Text>
-            <Text style={[styles.value, { color: COLORS.primary }]}>
-              {item.discount}%
-            </Text>
-          </View>
-        )}
+        <View style={styles.infoRow}>
+          <Text style={styles.cardLabel}>Giảm giá:</Text>
+          <Text style={[styles.value, { color: COLORS.primary }]}>
+            {item.discount}
+          </Text>
+        </View>
 
         {/* Chu kỳ thanh toán */}
         <View style={styles.infoRow}>
           <Text style={styles.cardLabel}>Thời hạn:</Text>
-          <Text style={styles.value}>{item.billingCycle}</Text>
+          <Text style={styles.value}>{formatDuration(item.billingCycle)}</Text>
         </View>
 
         {/* Mô tả gói */}
@@ -111,7 +109,7 @@ const SubPlanModal = ({ visible, subPlans, onSelected, onClose }: Props) => {
                 data={subPlans}
                 renderItem={renderSubscriptionItem}
                 keyExtractor={(item) => item.id}
-                showsHorizontalScrollIndicator={false}
+                showsVerticalScrollIndicator={false}
                 contentContainerStyle={styles.list}
               />
             </View>
@@ -172,6 +170,7 @@ const styles = StyleSheet.create({
   },
   listContainer: {
     paddingHorizontal: 8,
+    maxHeight: 400,
   },
   list: {
     paddingTop: 15,

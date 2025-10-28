@@ -1,5 +1,5 @@
-import { SubscriptionPlan } from "@src/types/subscription";
-import { VehicleDetail } from "@src/types/vehicle";
+import { SubscriptionPlan, SubVehicleReq } from "@src/types/subscription";
+import { VehicleDetail, VehicleReq } from "@src/types/vehicle";
 
 // VEHICLE
 export const toVehicleDetail = (data: any): VehicleDetail => ({
@@ -32,9 +32,11 @@ export const toVehicleDetail = (data: any): VehicleDetail => ({
           id: data.vehicle_subscription_id.subscription_id._id,
           name: data.vehicle_subscription_id.subscription_id.name,
           price: data.vehicle_subscription_id.subscription_id.price,
+          discount: data.vehicle_subscription_id.subscription_id.discount,
           billingCycle:
             data.vehicle_subscription_id.subscription_id.billing_cycle,
-          limitType: data.vehicle_subscription_id.subscription_id.limit_type,
+          description: data.vehicle_subscription_id.subscription_id.description,
+          isCompany: data.vehicle_subscription_id.subscription_id.isCompany,
         },
       }
     : null,
@@ -45,15 +47,23 @@ export const toVehicleListDetail = (data: any): VehicleDetail[] => {
   return (list || []).map(toVehicleDetail);
 };
 
+export const toVehiclePayload = (data: any): VehicleReq => ({
+  user_id: data.userId,
+  model: data.model,
+  plate_number: data.plateNumber,
+  batteryCapacity: Number(String(data.batteryCapacity).replace(",", ".")),
+});
+
 // SUBSCRIPTION PLAN
 export const toSubPlanDetail = (data: any): SubscriptionPlan => ({
   id: data._id,
   name: data.name,
   price: data.price,
+  discount: data.discount,
   billingCycle: data.billing_cycle,
-  limitType: data.limit_type,
   description: data.description,
   isActive: data.is_active,
+  isCompany: data.isCompany,
   createdAt: data.createdAt,
   updatedAt: data.updatedAt,
 });

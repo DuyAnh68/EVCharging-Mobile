@@ -2,18 +2,18 @@ export interface SubscriptionPlan {
   id: string;
   name: string;
   price: number;
-  discount?: number | null;
+  discount: number;
   billingCycle: string;
   description: string;
-  limitType: string;
   isActive: boolean;
+  isCompany: boolean;
   createdAt?: string;
   updatedAt?: string;
 }
 
 export type SubPlanDetail = Omit<
   SubscriptionPlan,
-  "discount" | "description" | "isActive" | "createdAt" | "updatedAt"
+  "isActive" | "createdAt" | "updatedAt"
 >;
 
 export interface SubscriptionVehicle {
@@ -30,3 +30,15 @@ export interface SubscriptionVehicle {
 export interface SubscriptionDetail extends SubscriptionVehicle {
   plan: SubPlanDetail;
 }
+
+export type SubVehicleReq = {
+  vehicle_id: string;
+  subscription_id: string;
+  auto_renew: boolean;
+  payment_status: string;
+};
+
+export type UpdateSubReq = {
+  type: "no renew" | "renew" | "change subscription";
+  subscription_plan_id: string | null;
+};

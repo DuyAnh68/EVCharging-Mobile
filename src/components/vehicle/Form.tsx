@@ -1,9 +1,10 @@
 import { Ionicons, MaterialIcons } from "@expo/vector-icons";
 import Button from "@src/components/Button";
+import { useVehicle } from "@src/hooks/useVehicle";
 import { COLORS, TEXTS } from "@src/styles/theme";
 import { SubscriptionPlan } from "@src/types/subscription";
 import { VehicleDetail, VehicleForm } from "@src/types/vehicle";
-import { formatVND } from "@src/utils/format";
+import { formatDuration, formatVND } from "@src/utils/format";
 import { validateVehicle } from "@src/utils/validateInput";
 import { useEffect, useState } from "react";
 import {
@@ -19,24 +20,29 @@ import {
   View,
 } from "react-native";
 import { KeyboardAwareScrollView } from "react-native-keyboard-aware-scroll-view";
+import LoadingOverlay from "../LoadingOverlay";
 import SubPlanModal from "./SubPlanModal";
 
 type Props = {
   visible: boolean;
   mode: "create" | "edit";
+  userId: string;
   vehicle?: VehicleDetail | null;
   subPlans: SubscriptionPlan[];
   onClose: () => void;
   onSuccess: (message: string) => void;
+  onError: (message: string) => void;
 };
 
 const Form = ({
   visible,
   mode,
+  userId,
   vehicle,
   subPlans,
   onClose,
   onSuccess,
+  onError,
 }: Props) => {
   // State
   const [form, setForm] = useState<VehicleForm>({
@@ -55,6 +61,12 @@ const Form = ({
   const [isUnselectedPlan, setIsUnselectedPlan] = useState<boolean>(false);
   const [isEdit, setIsEdit] = useState<boolean>(false);
   const [showPlans, setShowPlans] = useState<boolean>(false);
+  const [vehicleId, setVehicleId] = useState<string | null>(null);
+  const [preSubId, setPreSubId] = useState<string | null>(null);
+  const [isUpdateSub, setIsUpdateSub] = useState<boolean>(false);
+
+  // Hook
+  const { create, update, isLoading } = useVehicle();
 
   // Handle logic
   const handleSelectPlan = (planId: string) => {
@@ -62,6 +74,12 @@ const Form = ({
 
     const planData = subPlans.find((p) => p.id === planId);
     setSelectedPlanData(planData ?? null);
+
+    if (preSubId !== planId) {
+      setIsUpdateSub(true);
+    } else {
+      setIsUpdateSub(false);
+    }
   };
 
   const handleToggleUnselected = () => {
@@ -70,6 +88,12 @@ const Form = ({
       if (newValue) {
         setSelectedPlan(null);
         setSelectedPlanData(null);
+
+        if (preSubId) {
+          setIsUpdateSub(true);
+        } else {
+          setIsUpdateSub(false);
+        }
       }
       return newValue;
     });
@@ -96,18 +120,73 @@ const Form = ({
     resetForm();
   };
 
-  const handleSubmit = () => {
+  const handleCreate = async () => {
     if (!isFormValid()) return;
 
-    if (mode === "create") {
-      console.log("Creating vehicle:", form);
+    const payload = {
+      userId: userId,
+      model: form.model,
+      plateNumber: form.plateNumber,
+      batteryCapacity: form.batteryCapacity,
+      subscriptionId: selectedPlan,
+    };
+
+    const res = await create(payload);
+
+    if (res.success) {
       onSuccess("Thêm xe thành công!");
-    } else if (mode === "edit" && vehicle) {
-      console.log("Updating vehicle:", { id: vehicle.id, ...form });
-      onSuccess("Cập nhật xe thành công!");
+      handleClose();
+      return;
     }
-    resetForm();
-    onClose();
+
+    switch (res.step) {
+      case "createVehicle":
+        onError(res.message || "Không thể tạo xe. Vui lòng thử lại.");
+        break;
+
+      case "createSubscription":
+        if (res.vehicle) {
+          // Xe vẫn được tạo, chỉ lỗi khi đăng ký gói
+          onError(
+            res.message ||
+              "Xe đã được tạo thành công, nhưng đăng ký gói thất bại."
+          );
+
+          handleClose();
+        } else {
+          onError("Không thể đăng ký gói cho xe.");
+        }
+        break;
+
+      default:
+        onError("Đã xảy ra lỗi không xác định. Vui lòng thử lại.");
+    }
+  };
+
+  const handleUpdate = async () => {
+    if (!isFormValid()) return;
+
+    const payload = {
+      userId: userId,
+      vehicleId: vehicleId,
+      model: form.model,
+      plateNumber: form.plateNumber,
+      batteryCapacity: form.batteryCapacity,
+      isUpdateSub: isUpdateSub,
+      preSubId: preSubId,
+      subId: selectedPlan,
+    };
+
+    const res = await update(payload);
+
+    if (res.success) {
+      onSuccess("Cập nhật xe thành công!");
+      handleClose();
+      return;
+    }
+
+    onError(res.message);
+    handleClose();
   };
 
   // Reset form
@@ -119,8 +198,11 @@ const Form = ({
       subscriptionId: "",
     });
 
+    setVehicleId(null);
     setSelectedPlan(null);
     setSelectedPlanData(null);
+    setPreSubId(null);
+    setIsUpdateSub(false);
     setIsUnselectedPlan(false);
   };
 
@@ -147,7 +229,9 @@ const Form = ({
         subscriptionId: vehicle.subscriptionId || "",
       });
 
+      setVehicleId(vehicle.id);
       setSelectedPlan(vehicle.subscription?.plan.id || null);
+      setPreSubId(vehicle.subscription?.plan.id || null);
       setIsUnselectedPlan(!vehicle.subscriptionId);
     } else {
       resetForm();
@@ -156,6 +240,8 @@ const Form = ({
 
   return (
     <Modal visible={visible} transparent animationType="slide">
+      {isLoading && <LoadingOverlay />}
+
       {/* Overlay nền mờ */}
       <Pressable style={styles.overlay} onPress={onClose} />
       <TouchableWithoutFeedback
@@ -257,9 +343,9 @@ const Form = ({
                         shadowColor: "red",
                       },
                     ]}
-                    placeholder="VD: 5000"
+                    placeholder="VD: 1.5"
                     placeholderTextColor={TEXTS.placeholder}
-                    keyboardType="phone-pad"
+                    keyboardType="decimal-pad"
                     value={form.batteryCapacity}
                     onChangeText={(text) =>
                       handleChange("batteryCapacity", text)
@@ -298,7 +384,12 @@ const Form = ({
                         <Text style={[styles.subBtnText]}>▼</Text>
                       </TouchableOpacity>
                     ) : (
-                      <View style={[styles.subContainer, { marginBottom: 8 }]}>
+                      <TouchableOpacity
+                        onPress={() => {
+                          setShowPlans(true);
+                        }}
+                        style={[styles.subContainer, { marginBottom: 8 }]}
+                      >
                         <View
                           style={[
                             styles.cardContainer,
@@ -314,7 +405,7 @@ const Form = ({
                           <View style={styles.infoRow}>
                             <Text style={styles.cardLabel}>Thời hạn:</Text>
                             <Text style={styles.value}>
-                              {selectedPlanData.billingCycle}
+                              {formatDuration(selectedPlanData.billingCycle)}
                             </Text>
                           </View>
                           <View style={styles.infoRow}>
@@ -323,8 +414,14 @@ const Form = ({
                               {formatVND(selectedPlanData.price)}
                             </Text>
                           </View>
+                          <View style={styles.infoRow}>
+                            <Text style={styles.cardLabel}>Giảm giá:</Text>
+                            <Text style={styles.value}>
+                              {selectedPlanData.discount}
+                            </Text>
+                          </View>
                         </View>
-                      </View>
+                      </TouchableOpacity>
                     )}
 
                     <View style={styles.row}>
@@ -370,7 +467,9 @@ const Form = ({
                             <View style={styles.infoRow}>
                               <Text style={styles.cardLabel}>Thời hạn:</Text>
                               <Text style={styles.value}>
-                                {vehicle.subscription.plan.billingCycle}
+                                {formatDuration(
+                                  vehicle.subscription.plan.billingCycle
+                                )}
                               </Text>
                             </View>
                             <View style={styles.infoRow}>
@@ -379,24 +478,95 @@ const Form = ({
                                 {formatVND(vehicle.subscription.plan.price)}
                               </Text>
                             </View>
+                            <View style={styles.infoRow}>
+                              <Text style={styles.cardLabel}>Giảm giá:</Text>
+                              <Text style={styles.value}>
+                                {vehicle.subscription.plan.discount}
+                              </Text>
+                            </View>
                           </View>
                         )}
                       </View>
                     ) : (
                       // Không có gói → hiển thị nút “Không đăng ký”
-                      <View style={styles.row}>
-                        <TouchableOpacity
-                          style={[styles.toggleContainer, { opacity: 0.8 }]}
-                          disabled
-                        >
-                          <MaterialIcons
-                            name="check-box"
-                            size={24}
-                            color={COLORS.primary}
-                          />
-                          <Text style={styles.toggleText}>Không đăng ký</Text>
-                        </TouchableOpacity>
-                      </View>
+                      <>
+                        {!selectedPlanData ? (
+                          <TouchableOpacity
+                            disabled={isUnselectedPlan}
+                            style={[
+                              styles.subBtnContainer,
+                              isUnselectedPlan && { opacity: 0.5 },
+                            ]}
+                            onPress={() => {
+                              setShowPlans(true);
+                            }}
+                          >
+                            <Text style={[styles.subBtnText]}>Chọn gói</Text>
+                            <Text style={[styles.subBtnText]}>▼</Text>
+                          </TouchableOpacity>
+                        ) : (
+                          <TouchableOpacity
+                            onPress={() => {
+                              setShowPlans(true);
+                            }}
+                            style={[styles.subContainer, { marginBottom: 8 }]}
+                          >
+                            <View
+                              style={[
+                                styles.cardContainer,
+                                {
+                                  backgroundColor: COLORS.green50,
+                                  width: "100%",
+                                },
+                              ]}
+                            >
+                              <Text style={styles.cardTitle}>
+                                {selectedPlanData.name}
+                              </Text>
+                              <View style={styles.infoRow}>
+                                <Text style={styles.cardLabel}>Thời hạn:</Text>
+                                <Text style={styles.value}>
+                                  {formatDuration(
+                                    selectedPlanData.billingCycle
+                                  )}
+                                </Text>
+                              </View>
+                              <View style={styles.infoRow}>
+                                <Text style={styles.cardLabel}>Giá:</Text>
+                                <Text style={styles.value}>
+                                  {formatVND(selectedPlanData.price)}
+                                </Text>
+                              </View>
+                              <View style={styles.infoRow}>
+                                <Text style={styles.cardLabel}>Giảm giá:</Text>
+                                <Text style={styles.value}>
+                                  {selectedPlanData.discount}
+                                </Text>
+                              </View>
+                            </View>
+                          </TouchableOpacity>
+                        )}
+
+                        <View style={styles.row}>
+                          <TouchableOpacity
+                            onPress={handleToggleUnselected}
+                            style={styles.toggleContainer}
+                          >
+                            <MaterialIcons
+                              name={
+                                isUnselectedPlan
+                                  ? "check-box"
+                                  : "check-box-outline-blank"
+                              }
+                              size={24}
+                              color={
+                                isUnselectedPlan ? COLORS.primary : COLORS.black
+                              }
+                            />
+                            <Text style={styles.toggleText}>Không đăng ký</Text>
+                          </TouchableOpacity>
+                        </View>
+                      </>
                     )}
                   </>
                 )}
@@ -406,7 +576,13 @@ const Form = ({
                 <Button
                   text={mode === "create" ? "Tạo thêm" : "Cập nhật"}
                   colorType={isFormValid() ? "primary" : "grey"}
-                  onPress={handleSubmit}
+                  onPress={() => {
+                    if (mode === "create") {
+                      handleCreate();
+                    } else {
+                      handleUpdate();
+                    }
+                  }}
                   disabled={!isFormValid()}
                   width={300}
                   height={50}
