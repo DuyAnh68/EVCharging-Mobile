@@ -34,6 +34,7 @@ export const useBooking = () => {
   const getAllBookingsFilterChargingPoints = async (
     chargingPointId: string
   ) => {
+    showLoading();
     try {
       const res = await bookingService.getAllFilterChargingPoints(
         chargingPointId
@@ -49,11 +50,14 @@ export const useBooking = () => {
         success: false,
         message: "Không thể lấy danh sách booking!",
       };
+    } finally {
+      hideLoading();
     }
   };
 
   // GET BOOKING BY ID
   const getBookingById = async (id: string) => {
+    showLoading();
     try {
       const res = await bookingService.getById(id);
       const isSuccess = res.status === 200 || res.status === 201;
@@ -67,6 +71,28 @@ export const useBooking = () => {
         success: false,
         message: "Không thể lấy thông tin booking!",
       };
+    } finally {
+      hideLoading();
+    }
+  };
+
+  const getAllMyBooking = async () => {
+    showLoading();
+    try {
+      const res = await bookingService.getAllMyBooking();
+      const isSuccess = res.status === 200 || res.status === 201;
+      return {
+        success: isSuccess,
+        data: res.data,
+        message: res.data?.message || "",
+      };
+    } catch (error: any) {
+      return {
+        success: false,
+        message: "Không thể lấy thông tin booking!",
+      };
+    } finally {
+      hideLoading();
     }
   };
 
@@ -124,5 +150,6 @@ export const useBooking = () => {
     getBookingById,
     updateBooking,
     deleteBooking,
+    getAllMyBooking,
   };
 };
