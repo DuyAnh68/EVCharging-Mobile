@@ -1,19 +1,20 @@
 import { FontAwesome5, Ionicons } from "@expo/vector-icons";
-import LoadingOverlay from "@src/components/LoadingOverlay";
 import ModalPopup from "@src/components/ModalPopup";
 import Card from "@src/components/vehicle/Card";
 import Detail from "@src/components/vehicle/Detail";
 import Form from "@src/components/vehicle/Form";
 import { useAuthContext } from "@src/context/AuthContext";
 import { useLoading } from "@src/context/LoadingContext";
+import { usePayment } from "@src/context/PaymentContext";
 import { useSubscription } from "@src/hooks/useSubscription";
 import { useVehicle } from "@src/hooks/useVehicle";
 import { COLORS, TEXTS } from "@src/styles/theme";
 import { SubscriptionPlan } from "@src/types/subscription";
 import { VehicleDetail } from "@src/types/vehicle";
-import { useEffect, useState } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import {
   FlatList,
+  RefreshControl,
   StyleSheet,
   Text,
   TouchableOpacity,
@@ -32,21 +33,22 @@ export default function VehicleScreen() {
   const [successMsg, setSuccessMsg] = useState<string>("");
   const [showError, setShowError] = useState<boolean>(false);
   const [errorMsg, setErrorMsg] = useState<string>("");
+  const [showMsg, setShowMsg] = useState<boolean>(false);
+  const [msg, setMsg] = useState<string>("");
   const [selectedVehicle, setSelectedVehicle] = useState<VehicleDetail | null>(
     null
   );
+  const [refreshing, setRefreshing] = useState(false);
 
   // Hook
-  const {
-    getVehicles,
-    deleteVehicle,
-  } = useVehicle();
+  const { getVehicles, deleteVehicle } = useVehicle();
   const { getSubPlans } = useSubscription();
   const { isLoading } = useLoading();
   const { user } = useAuthContext();
+  const { paymentResult, setPaymentResult } = usePayment();
 
   // Api
-  const fetchVehicles = async () => {
+  const fetchVehicles = useCallback(async () => {
     const res = await getVehicles();
 
     if (res.success && res.vehicles) {
@@ -56,7 +58,7 @@ export default function VehicleScreen() {
 
     setErrorMsg(res.message || "Không thể lấy danh sách xe!");
     setShowError(true);
-  };
+  }, [user]);
 
   const fetchSubPlans = async () => {
     const res = await getSubPlans();
@@ -73,6 +75,12 @@ export default function VehicleScreen() {
   const fetchData = async () => {
     await Promise.allSettled([fetchVehicles(), fetchSubPlans()]);
   };
+
+  const onRefresh = useCallback(async () => {
+    setRefreshing(true);
+    await fetchVehicles();
+    setRefreshing(false);
+  }, [fetchVehicles]);
 
   // Handle logic
   const handleShowForm = () => {
@@ -158,10 +166,27 @@ export default function VehicleScreen() {
     setErrorMsg("");
   };
 
+  // Check
+  const isCompany = user?.isCompany ?? false;
+
   // UseEffect
   useEffect(() => {
     fetchData();
   }, []);
+
+  useEffect(() => {
+    if (paymentResult === "success") {
+      fetchData();
+      setPaymentResult(null);
+    }
+    if (paymentResult === "failed") {
+      setMsg(
+        "Xe của bạn đã được tạo nhưng thanh toán gói thất bại. Vui lòng thử đăng ký gói lại sau."
+      );
+      setShowMsg(true);
+      fetchData();
+    }
+  }, [paymentResult]);
 
   // Render card
   const renderVehicleItem = ({ item }: { item: VehicleDetail }) => (
@@ -175,7 +200,6 @@ export default function VehicleScreen() {
 
   return (
     <SafeAreaView style={styles.container} edges={["left", "right"]}>
-
       {/* Header */}
       <View style={styles.headerSection}>
         <View>
@@ -185,9 +209,12 @@ export default function VehicleScreen() {
             <Ionicons name="car-sport" size={20} color={COLORS.white} />
           </View>
         </View>
-        <TouchableOpacity style={styles.addButton} onPress={handleShowForm}>
-          <Ionicons name="add" size={24} color={COLORS.primary} />
-        </TouchableOpacity>
+
+        {!isCompany && (
+          <TouchableOpacity style={styles.addButton} onPress={handleShowForm}>
+            <Ionicons name="add" size={24} color={COLORS.primary} />
+          </TouchableOpacity>
+        )}
       </View>
 
       {/* Vehicle List */}
@@ -197,7 +224,16 @@ export default function VehicleScreen() {
           renderItem={renderVehicleItem}
           keyExtractor={(item) => item.id}
           contentContainerStyle={styles.listContent}
+          refreshControl={
+            <RefreshControl
+              refreshing={refreshing}
+              onRefresh={onRefresh}
+              tintColor={COLORS.primary}
+            />
+          }
           scrollEnabled={true}
+          showsVerticalScrollIndicator={false}
+          scrollEventThrottle={16}
         />
       ) : (
         !isLoading && (
@@ -292,6 +328,23 @@ export default function VehicleScreen() {
             setErrorMsg("");
           }}
           onConfirm={handleConfirmError}
+          modalWidth={355}
+        />
+      )}
+
+      {showMsg && (
+        <ModalPopup
+          visible={showMsg}
+          mode="noti"
+          contentText={msg}
+          icon={<FontAwesome5 name="exclamation" size={30} color="white" />}
+          iconBgColor="yellow"
+          confirmBtnText="Đóng"
+          confirmBtnColor="grey"
+          onClose={() => {
+            setShowMsg(false);
+            setMsg("");
+          }}
           modalWidth={355}
         />
       )}

@@ -1,5 +1,6 @@
 import { subscriptionApi } from "@src/apis/subscriptionApi";
 import {
+  PayForSubReq,
   SubscriptionPlan,
   SubVehicleReq,
   UpdateSubReq,
@@ -30,4 +31,11 @@ export const subscriptionRepo = {
 
     return res;
   },
+
+  // Payment
+  payForSubscription: async (payload: PayForSubReq) => {
+    const res = await subscriptionApi.payForSubscription(payload);
+
+    return res;
+  }
 };

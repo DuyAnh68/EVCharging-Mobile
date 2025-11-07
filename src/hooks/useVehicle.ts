@@ -1,8 +1,7 @@
 import { useLoading } from "@src/context/LoadingContext";
 import { useSubscription } from "@src/hooks/useSubscription";
-import { subscriptionService } from "@src/services/subscriptionService";
 import { vehicleService } from "@src/services/vehicleService";
-import { SubVehicleReq } from "@src/types/subscription";
+import { PayForSubReq, SubVehicleReq } from "@src/types/subscription";
 import { CreateVehicleResponse } from "@src/types/vehicle";
 import { mapErrorMsg } from "@src/utils/errorMsgMapper";
 import { toVehiclePayload } from "@src/utils/mapData";
@@ -11,7 +10,12 @@ import { useState } from "react";
 export const useVehicle = () => {
   // Hook
   const { showLoading, hideLoading } = useLoading();
-  const { create: createSub, update: updateSub } = useSubscription();
+  const {
+    create: createSub,
+    update: updateSub,
+    payForSubscription,
+    handleVNPayPayment,
+  } = useSubscription();
 
   // State
   const [isLoading, setIsLoading] = useState<boolean>(false);
@@ -49,39 +53,42 @@ export const useVehicle = () => {
       const vehiclePayload = toVehiclePayload(payload);
       const resVehicle = await vehicleService.create(vehiclePayload);
 
-      if (resVehicle.status !== 200 && resVehicle.status !== 201) {
-        throw { step: "createVehicle", error: new Error("Tạo xe thất bại.") };
+      if (![200, 201].includes(resVehicle.status)) {
+        throw { step: "createVehicle", message: "Tạo xe thất bại!" };
       }
 
       const createdVehicle = resVehicle.data;
 
       // 2. Nếu có gói đăng ký thì tiếp tục
       if (payload.subscriptionId) {
-        try {
-          const subPayload: SubVehicleReq = {
-            vehicle_id: createdVehicle._id,
-            subscription_id: payload.subscriptionId,
-            auto_renew: payload.autoRenew ?? false,
-            payment_status: "pending",
+        const subPayload: PayForSubReq = {
+          userId: payload.userId,
+          vehicle_id: createdVehicle._id,
+          subscription_id: payload.subscriptionId,
+          amount: payload.amount,
+          payment_status: "pending",
+        };
+
+        const resSub = await payForSubscription(subPayload);
+
+        if (!resSub.success) {
+          throw {
+            step: "createSub",
+            message: resSub.message || "Đăng ký gói thất bại!",
           };
+        }
 
-          const resSub = await subscriptionService.create(subPayload);
-
-          if (resSub.status !== 200 && resSub.status !== 201) {
-            throw {
-              step: "createSubscription",
-              error: new Error("Đăng ký gói thất bại."),
-            };
-          }
+        const paymentUrl = resSub.data;
+        if (paymentUrl) {
+          await handleVNPayPayment(paymentUrl);
 
           return {
-            success: true,
-            vehicle: createdVehicle,
-            subscription: resSub.data,
+            success: false,
+            message: "Đang chờ thanh toán VNPay...",
+            step: "pendingPayment",
           };
-        } catch (error: any) {
-          // Nếu lỗi từ API đăng ký gói
-          throw { step: "createSubscription", error, vehicle: createdVehicle };
+        } else {
+          console.warn("Không có paymentUrl trả về từ server!");
         }
       }
 
@@ -90,20 +97,27 @@ export const useVehicle = () => {
         success: true,
         vehicle: createdVehicle,
       };
-    } catch (err: any) {
-      const step = err.step ?? "unknown";
-
-      return {
-        success: false,
-        step,
-        message:
-          step === "createVehicle"
-            ? "Không thể tạo xe."
-            : step === "createSubscription"
-            ? "Không thể đăng ký gói cho xe."
-            : "Đã xảy ra lỗi không xác định.",
-        ...(err.vehicle ? { vehicle: err.vehicle } : {}),
-      };
+    } catch (error: any) {
+      switch (error.step) {
+        case "createVehicle":
+          return {
+            success: false,
+            message: error.message || "Không thể tạo xe!",
+            step: "createVehicle",
+          };
+        case "createSubscription":
+          return {
+            success: false,
+            message: error.message || "Không thể đăng ký gói cho xe!",
+            step: "createSubscription",
+          };
+        default:
+          return {
+            success: false,
+            message: "Đã xảy ra lỗi không xác định khi tạo xe!",
+            step: "unknown",
+          };
+      }
     } finally {
       setIsLoading(false);
     }

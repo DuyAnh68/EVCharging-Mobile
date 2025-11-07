@@ -78,7 +78,7 @@ const Info = ({ visible, user, onClose, onSuccess, onError }: Props) => {
     onError(res.message || "Cập nhật thất bại!");
   };
 
-  // Check valid
+  // Check
   const isFormValid = () => {
     const noErrors = Object.values(errors).every((err) => !err);
 
@@ -86,6 +86,16 @@ const Info = ({ visible, user, onClose, onSuccess, onError }: Props) => {
 
     return noErrors && allFilled && !isEdit;
   };
+
+  const isChanged = () => {
+    return (
+      form.username !== user.username ||
+      form.phone !== user.phone ||
+      form.email !== user.email
+    );
+  };
+
+  const canUpdate = isFormValid() && isChanged();
 
   // UseEffect
   useEffect(() => {
@@ -217,9 +227,9 @@ const Info = ({ visible, user, onClose, onSuccess, onError }: Props) => {
                 <View style={styles.btnContainer}>
                   <Button
                     text="Cập nhật"
-                    colorType={isFormValid() ? "primary" : "grey"}
+                    colorType={canUpdate ? "primary" : "grey"}
                     onPress={handleSubmit}
-                    disabled={!isFormValid()}
+                    disabled={!canUpdate}
                     width={280}
                     height={50}
                     fontSize={18}

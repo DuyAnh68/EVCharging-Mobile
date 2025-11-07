@@ -106,21 +106,58 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         scheduleAutoRefresh(decoded.exp, storedRefresh);
 
         const info = await getInfo();
-        if (info.success && info.data) setUser(info.data);
+        if (info.success && info.data) {
+          const user = info.data;
+
+          // Kiểm tra trạng thái tài khoản
+          if (user.status !== "active") {
+            setErrorMsg(
+              "Tài khoản của bạn hiện không hoạt động. Vui lòng liên hệ hỗ trợ!"
+            );
+            setErrorModal(true);
+
+            setTimeout(async () => {
+              await logout();
+            }, 3500);
+            return;
+          }
+
+          setUser(user);
+        }
       } else {
         // accessToken hết hạn → thử refresh
         console.log("⚠️ Access token hết hạn, đang thử refresh...");
         const res = await refresh(storedRefresh);
+
         if (res.success) {
           setAccessToken(res.data.accessToken);
           setRefreshToken(res.data.refreshToken);
+
           const decodedNew = decodeToken(res.data.accessToken);
           if (decodedNew?.exp) {
             setExp(decodedNew.exp);
             scheduleAutoRefresh(decodedNew.exp, res.data.refreshToken);
           }
+
           const info = await getInfo();
-          if (info.success && info.data) setUser(info.data);
+          if (info.success && info.data) {
+            const user = info.data;
+
+            // Kiểm tra trạng thái tài khoản
+            if (user.status !== "active") {
+              setErrorMsg(
+                "Tài khoản của bạn hiện không hoạt động. Vui lòng liên hệ hỗ trợ!"
+              );
+              setErrorModal(true);
+
+              setTimeout(async () => {
+                await logout();
+              }, 3500);
+              return;
+            }
+
+            setUser(user);
+          }
         } else {
           setErrorMsg(res.message || "Phiên đăng nhập đã hết hạn!");
           setErrorModal(true);

@@ -33,6 +33,7 @@ export const authRepo = {
       phone: raw.phone,
       role: raw.role,
       status: raw.status,
+      isCompany: raw.isCompany,
       createdAt: raw.createdAt,
       updatedAt: raw.updatedAt,
     };
@@ -52,6 +53,7 @@ export const authRepo = {
       phone: raw.phone,
       role: raw.role,
       status: raw.status,
+      isCompany: raw.isCompany,
       createdAt: raw.createdAt,
       updatedAt: raw.updatedAt,
     };

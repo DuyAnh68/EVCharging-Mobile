@@ -38,7 +38,7 @@ type CreateVehicleSuccess = {
 
 type CreateVehicleError = {
   success: false;
-  step: "createVehicle" | "createSubscription" | "unknown";
+  step: "createVehicle" | "createSubscription" | "unknown" | "pendingPayment";
   message: string;
   vehicle?: any;
 };

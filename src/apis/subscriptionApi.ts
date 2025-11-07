@@ -1,5 +1,9 @@
 import axiosClient from "@src/apis/axiosClient";
-import { SubVehicleReq, UpdateSubReq } from "@src/types/subscription";
+import {
+  PayForSubReq,
+  SubVehicleReq,
+  UpdateSubReq,
+} from "@src/types/subscription";
 
 export const subscriptionApi = {
   // Get List
@@ -34,6 +38,17 @@ export const subscriptionApi = {
       `/vehicle-subscriptions/${subId}/select-option-after-expire`,
       payload
     );
+
+    return {
+      status: res.status,
+      data: res.data,
+      message: res.data?.message,
+    };
+  },
+
+  // Payment
+  payForSubscription: async (payload: PayForSubReq) => {
+    const res = await axiosClient.post(`/payment/pay-for-subscription`, payload);
 
     return {
       status: res.status,

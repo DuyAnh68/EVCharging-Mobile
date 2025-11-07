@@ -2,7 +2,7 @@ import { Ionicons } from "@expo/vector-icons";
 import Button from "@src/components/Button";
 import { COLORS, TEXTS } from "@src/styles/theme";
 import { SubscriptionPlan } from "@src/types/subscription";
-import { formatDuration, formatVND } from "@src/utils/format";
+import { formatDuration, formatVND } from "@src/utils/formatData";
 import { useState } from "react";
 import {
   FlatList,
