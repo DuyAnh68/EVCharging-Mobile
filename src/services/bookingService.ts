@@ -12,6 +12,10 @@ export const bookingService = {
     return await bookingRepo.getAllFilterChargingPoints(chargingPointId);
   },
 
+  getAllMyBooking: async () => {
+    return await bookingRepo.getAllMyBooking();
+  },
+
   // Get booking by ID
   getById: async (id: string) => {
     return await bookingRepo.getById(id);

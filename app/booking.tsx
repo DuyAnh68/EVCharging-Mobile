@@ -2,6 +2,7 @@ import DateTimePicker from "@react-native-community/datetimepicker";
 import { Background } from "@src/components/AppBg";
 import { useAuthContext } from "@src/context/AuthContext";
 import { useBooking } from "@src/hooks/useBooking";
+import { COLORS } from "@src/styles/theme";
 import { router, useLocalSearchParams } from "expo-router";
 import { Calendar, CheckCircle, Clock } from "lucide-react-native";
 import React, { useEffect, useMemo, useState } from "react";
@@ -18,6 +19,7 @@ import {
 export default function BookingScreen() {
   const { stationId, vehicleId, booking, chargingPoint } =
     useLocalSearchParams();
+  console.log(vehicleId);
   const { createBooking } = useBooking();
   const { user } = useAuthContext();
   console.log(booking);
@@ -222,7 +224,7 @@ export default function BookingScreen() {
                 onPress={() => handleSelectSlot(slot)}
               >
                 <Clock
-                  color={booked ? "#9CA3AF" : selected ? "#fff" : "#10B981"}
+                  color={booked ? "#040608ff" : selected ? "#fff" : "#070707ff"}
                   size={16}
                 />
                 <Text
@@ -292,18 +294,19 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     alignItems: "center",
     gap: 6,
+    opacity: 1,
   },
   slotBooked: {
-    backgroundColor: "#05348bff",
-    borderColor: "#9CA3AF",
-    opacity: 0.6,
+    backgroundColor: COLORS.inactive,
+    borderColor: COLORS.black,
+    opacity: 0.7,
   },
   slotSelected: {
     backgroundColor: "#10B981",
     borderColor: "#059669",
   },
   slotText: { fontSize: 13, fontWeight: "500", color: "#111" },
-  slotTextBooked: { color: "#fff" },
+  slotTextBooked: { color: "#111" },
   slotTextSelected: { color: "#fff" },
   button: {
     flexDirection: "row",
