@@ -45,27 +45,46 @@ export const useAuth = () => {
   const login = async (payload: LoginReq) => {
     try {
       showLoading();
+      
       const res = await authService.login(payload);
       const isSuccess = res.status === 200 || res.status === 201;
 
-      if (isSuccess) {
-        const data = res.data;
-        await AsyncStorage.multiSet([
-          ["accessToken", data.accessToken],
-          ["refreshToken", data.refreshToken],
-        ]);
-
-        const decoded = decodeToken(data.accessToken);
-
-        if (decoded) {
-          await AsyncStorage.setItem("tokenExp", decoded.exp.toString());
-          await AsyncStorage.setItem("userId", decoded.accountId);
-        }
+      if (!isSuccess) {
+        return {
+          success: false,
+          message: res.data?.message || "Đăng nhập thất bại",
+        };
       }
-      const info = await getInfo();
+
+      const data = res.data;
+
+      await AsyncStorage.multiSet([
+        ["accessToken", data.accessToken],
+        ["refreshToken", data.refreshToken],
+      ]);
+
+      const info = await authService.getInfo();
+      const user = info.data;
+
+      // Kiểm tra tài khoản
+      if (user.status !== "active") {
+        await AsyncStorage.multiRemove(["accessToken", "refreshToken", "user"]);
+        return {
+          success: false,
+          message:
+            "Tài khoản của bạn hiện không hoạt động. Vui lòng liên hệ hỗ trợ!",
+        };
+      }
+
+      const decoded = decodeToken(data.accessToken);
+      if (decoded) {
+        await AsyncStorage.setItem("tokenExp", decoded.exp.toString());
+        await AsyncStorage.setItem("userId", decoded.accountId);
+      }
+
       return {
-        success: isSuccess,
-        user: info.data,
+        success: true,
+        user,
         message: res.data?.message || "",
       };
     } catch (error: any) {

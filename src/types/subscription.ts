@@ -14,7 +14,7 @@ export interface SubscriptionPlan {
 export type SubPlanDetail = Omit<
   SubscriptionPlan,
   "isActive" | "createdAt" | "updatedAt"
->;
+  >;
 
 export interface SubscriptionVehicle {
   id: string;
@@ -41,4 +41,12 @@ export type SubVehicleReq = {
 export type UpdateSubReq = {
   type: "no renew" | "renew" | "change subscription";
   subscription_plan_id: string | null;
+};
+
+export type PayForSubReq = {
+  userId: string;
+  vehicle_id: string;
+  subscription_id: string;
+  amount: number;
+  payment_status: string;
 };

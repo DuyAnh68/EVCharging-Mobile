@@ -116,11 +116,13 @@ export const validateVehicle = (
       const capacity = Number(normalized);
       if (isNaN(capacity)) return "Dung lượng pin phải là số.";
 
-      if (capacity <= 0) return "Dung lượng pin phải lớn hơn 0.";
+      if (capacity < 50) return "Dung lượng pin phải lớn hơn 50.";
+
+      if (capacity > 100) return "Dung lượng pin phải nhỏ hơn 100.";
 
       // Kiểm tra đúng định dạng số (vd: 1, 1.5, 2.75)
       if (!/^\d+(\.\d+)?$/.test(normalized))
-        return "Dung lượng pin không hợp lệ. Ví dụ: 1.5 hoặc 2";
+        return "Dung lượng pin không hợp lệ. Ví dụ: 50.5 hoặc 60";
 
       break;
   }

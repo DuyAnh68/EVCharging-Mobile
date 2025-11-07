@@ -1,4 +1,11 @@
-import { SubscriptionPlan, SubVehicleReq } from "@src/types/subscription";
+import {
+  Invoice,
+  InvoiceDetail,
+  InvoiceResponse,
+  Summary,
+} from "@src/types/invoice";
+import { SessionDetail } from "@src/types/session";
+import { SubscriptionPlan } from "@src/types/subscription";
 import { VehicleDetail, VehicleReq } from "@src/types/vehicle";
 
 // VEHICLE
@@ -72,3 +79,152 @@ export const toSubPlanListDetail = (data: any): SubscriptionPlan[] => {
   const list = Array.isArray(data) ? data : data?.subcriptions;
   return (list || []).map(toSubPlanDetail);
 };
+
+// SESSION
+export const toSessionDetail = (data: any): SessionDetail => ({
+  id: data._id,
+  bookingId: data.booking_id?._id || null,
+  chargingPoint: {
+    id: data.chargingPoint_id._id,
+    stationId: data.chargingPoint_id.stationId,
+    status: data.chargingPoint_id.status,
+    type: data.chargingPoint_id.type,
+    currentSessionId: data.chargingPoint_id.current_session_id,
+    createdAt: data.chargingPoint_id.create_at,
+  },
+  vehicle: {
+    id: data.vehicle_id._id,
+    plateNumber: data.vehicle_id.plate_number,
+    model: data.vehicle_id.model,
+    batteryCapacity: data.vehicle_id.batteryCapacity,
+    subscriptionId: data.vehicle_id.vehicle_subscription_id,
+    userId: data.vehicle_id.user_id,
+    companyId: data.vehicle_id.company_id,
+  },
+  startTime: data.start_time,
+  endTime: data.end_time,
+  status: data.status,
+  initialBattery: data.initial_battery_percentage,
+  targetBattery: data.target_battery_percentage,
+  currentBattery: data.current_battery_percentage,
+  energyDeliveredKwh: data.energy_delivered_kwh,
+  chargingMinutes: data.charging_duration_minutes,
+  chargingHours: data.charging_duration_hours,
+  baseFee: data.base_fee,
+  price: data.price_per_kwh,
+  chargingFee: data.charging_fee,
+  totalAmount: data.total_amount,
+  createdAt: data.createdAt,
+  updatedAt: data.updatedAt,
+});
+
+export const toSessionListDetail = (data: any): SessionDetail[] => {
+  const list = Array.isArray(data) ? data : data?.sessions;
+  return (list || []).map(toSessionDetail);
+};
+
+// INVOICE
+export const toInvoice = (data: any): Invoice => {
+  // Tách model và biển số
+  let model = "";
+  let plateNumber = "";
+  if (typeof data.vehicle === "string" && data.vehicle.includes(" - ")) {
+    [model, plateNumber] = data.vehicle.split(" - ");
+  } else {
+    model = data.vehicle || "";
+  }
+
+  // Chuẩn hóa tiền
+  let totalAmount = data.total_amount || "0đ";
+  if (typeof totalAmount === "string") {
+    totalAmount = totalAmount.replace(/\s*đ/, "đ").trim();
+  }
+
+  return {
+    id: data.id,
+    station: data.station,
+    address: data.address,
+    vehicle: {
+      model,
+      plateNumber,
+    },
+    duration: data.duration,
+    energyDelivered: data.energy_delivered,
+    batteryCharged: data.battery_charged,
+    totalAmount,
+    paymentStatus: data.payment_status,
+    paymentMethod: data.payment_method,
+    createdAt: data.created_at,
+  };
+};
+
+export const toSummary = (data: any): Summary => {
+  const normalizeAmount = (amount: string | undefined): string => {
+    if (!amount) return "0đ";
+    return amount.replace(/\s*đ/, "đ").trim();
+  };
+
+  return {
+    totalInvoices: data.total_invoices || 0,
+    unpaid: {
+      count: data.unpaid?.count || 0,
+      totalAmount: normalizeAmount(data.unpaid?.total_amount),
+      totalEnergy: data.unpaid?.total_energy || "0.00 kWh",
+    },
+    paid: {
+      count: data.paid?.count || 0,
+      totalAmount: normalizeAmount(data.paid?.total_amount),
+      totalEnergy: data.paid?.total_energy || "0.00 kWh",
+    },
+  };
+};
+
+export const toInvoiceList = (data: any): InvoiceResponse => ({
+  invoices: Array.isArray(data.invoices) ? data.invoices.map(toInvoice) : [],
+  summary: data.summary
+    ? toSummary(data.summary)
+    : {
+        totalInvoices: 0,
+        unpaid: { count: 0, totalAmount: "0đ", totalEnergy: "0.00 kWh" },
+        paid: { count: 0, totalAmount: "0đ", totalEnergy: "0.00 kWh" },
+      },
+});
+
+export const toInvoiceDetail = (data: any): InvoiceDetail => ({
+  invoice: {
+    id: data.invoice_info.id,
+    createdAt: data.invoice_info.created_at,
+  },
+  station: {
+    name: data.station_info.name,
+    address: data.station_info.address,
+  },
+  vehicle: {
+    model: data.vehicle_info.model,
+    plateNumber: data.vehicle_info.plate_number,
+    batteryCapacity: data.vehicle_info.battery_capacity,
+  },
+  session: {
+    startTime: data.charging_session.start_time,
+    endTime: data.charging_session.end_time,
+    duration: data.charging_session.duration,
+    initialBattery: data.charging_session.initial_battery,
+    targetBattery: data.charging_session.target_battery,
+    finalBattery: data.charging_session.final_battery,
+    batteryCharged: data.charging_session.battery_charged,
+    targetReached: data.charging_session.target_reached,
+    energyDelivered: data.charging_session.energy_delivered,
+    powerCapacity: data.charging_session.power_capacity,
+    calculationMethod: data.charging_session.calculation_method,
+  },
+  pricing: {
+    baseFee: data.pricing.base_fee,
+    price: data.pricing.price_per_kwh,
+    charging_fee: data.pricing.charging_fee,
+    total_amount: data.pricing.total_amount,
+  },
+  payment: {
+    method: data.payment.method,
+    status: data.payment.status,
+  },
+});

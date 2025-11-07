@@ -1,10 +1,12 @@
 import { Ionicons, MaterialIcons } from "@expo/vector-icons";
 import Button from "@src/components/Button";
+import LoadingOverlay from "@src/components/LoadingOverlay";
+import SubPlanModal from "@src/components/vehicle/SubPlanModal";
 import { useVehicle } from "@src/hooks/useVehicle";
 import { COLORS, TEXTS } from "@src/styles/theme";
 import { SubscriptionPlan } from "@src/types/subscription";
 import { VehicleDetail, VehicleForm } from "@src/types/vehicle";
-import { formatDuration, formatVND } from "@src/utils/format";
+import { formatDuration, formatVND } from "@src/utils/formatData";
 import { validateVehicle } from "@src/utils/validateInput";
 import { useEffect, useState } from "react";
 import {
@@ -20,8 +22,6 @@ import {
   View,
 } from "react-native";
 import { KeyboardAwareScrollView } from "react-native-keyboard-aware-scroll-view";
-import LoadingOverlay from "../LoadingOverlay";
-import SubPlanModal from "./SubPlanModal";
 
 type Props = {
   visible: boolean;
@@ -129,9 +129,16 @@ const Form = ({
       plateNumber: form.plateNumber,
       batteryCapacity: form.batteryCapacity,
       subscriptionId: selectedPlan,
+      amount: selectedPlanData?.price,
     };
 
     const res = await create(payload);
+
+    if (!res.success && res.step === "pendingPayment") {
+      console.log("Đang mở VNPay - người dùng sẽ quay lại sau thanh toán");
+      handleClose();
+      return;
+    }
 
     if (res.success) {
       onSuccess("Thêm xe thành công!");
@@ -139,28 +146,7 @@ const Form = ({
       return;
     }
 
-    switch (res.step) {
-      case "createVehicle":
-        onError(res.message || "Không thể tạo xe. Vui lòng thử lại.");
-        break;
-
-      case "createSubscription":
-        if (res.vehicle) {
-          // Xe vẫn được tạo, chỉ lỗi khi đăng ký gói
-          onError(
-            res.message ||
-              "Xe đã được tạo thành công, nhưng đăng ký gói thất bại."
-          );
-
-          handleClose();
-        } else {
-          onError("Không thể đăng ký gói cho xe.");
-        }
-        break;
-
-      default:
-        onError("Đã xảy ra lỗi không xác định. Vui lòng thử lại.");
-    }
+    onError(res.message);
   };
 
   const handleUpdate = async () => {
@@ -206,7 +192,7 @@ const Form = ({
     setIsUnselectedPlan(false);
   };
 
-  // Check valid
+  // Check
   const isFormValid = () => {
     const noErrors = Object.values(errors).every((err) => !err);
 
@@ -216,7 +202,23 @@ const Form = ({
 
     const hasChoosePlan = selectedPlan !== null || isUnselectedPlan;
 
+    if (mode === "edit") {
+      return noErrors && allFilled && hasChoosePlan && isChanged();
+    }
+
     return noErrors && allFilled && hasChoosePlan && !isEdit;
+  };
+
+  const isChanged = () => {
+    if (!vehicle) return false;
+
+    return (
+      form.model !== vehicle.model ||
+      form.plateNumber !== vehicle.plateNumber ||
+      form.batteryCapacity !== vehicle.batteryCapacity?.toString() ||
+      selectedPlan !== preSubId ||
+      (vehicle.subscriptionId && isUnselectedPlan)
+    );
   };
 
   // UseEffect
@@ -243,7 +245,7 @@ const Form = ({
       {isLoading && <LoadingOverlay />}
 
       {/* Overlay nền mờ */}
-      <Pressable style={styles.overlay} onPress={onClose} />
+      <Pressable style={styles.overlay} onPress={handleClose} />
       <TouchableWithoutFeedback
         onPress={() => {
           Keyboard.dismiss();

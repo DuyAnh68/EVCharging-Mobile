@@ -2,8 +2,12 @@ import { FontAwesome5, Ionicons } from "@expo/vector-icons";
 import ModalPopup from "@src/components/ModalPopup";
 import Info from "@src/components/profile/Info";
 import { useAuthContext } from "@src/context/AuthContext";
+import { useInvoice } from "@src/hooks/useInvoice";
+import { useSession } from "@src/hooks/useSession";
 import { COLORS } from "@src/styles/theme";
-import { useState } from "react";
+import { calcTotalChargingDuration } from "@src/utils/calculateData";
+import { router } from "expo-router";
+import { useEffect, useState } from "react";
 import {
   ScrollView,
   StyleSheet,
@@ -16,12 +20,54 @@ export default function ProfileScreen() {
   // Context
   const { logout, user } = useAuthContext();
 
+  // Hook
+  const { getSessionsCompleted } = useSession();
+  const { getInvoices } = useInvoice();
+
   // State
   const [showInfo, setShowInfo] = useState<boolean>(false);
   const [showSuccess, setShowSuccess] = useState<boolean>(false);
   const [successMsg, setSuccessMsg] = useState<string>("");
   const [showError, setShowError] = useState<boolean>(false);
   const [errorMsg, setErrorMsg] = useState<string>("");
+  const [stats, setStats] = useState({
+    count: 0,
+    totalHours: "",
+    totalAmount: "",
+  });
+
+  // Api
+  const fetchStats = async () => {
+    if (!user) return;
+    const resSession = await getSessionsCompleted(user.userId);
+    if (resSession.success && resSession.sessions) {
+      const totalHours = calcTotalChargingDuration(resSession.sessions);
+
+      setStats((prev) => ({
+        ...prev,
+        count: resSession.sessions.length,
+        totalHours,
+      }));
+    } else {
+      setErrorMsg(resSession.message || "Không thể lấy dữ liệu phiên sạc!");
+      setShowError(true);
+      return;
+    }
+
+    const resInvoices = await getInvoices(user.userId);
+    if (resInvoices.success && resInvoices.invoices) {
+      const totalAmount = resInvoices.invoices.summary.paid.totalAmount;
+
+      setStats((prev) => ({
+        ...prev,
+        totalAmount,
+      }));
+    } else {
+      setErrorMsg(resInvoices.message || "Không thể lấy danh sách giao dịch!");
+      setShowError(true);
+      return;
+    }
+  };
 
   // Hanlde logic
   const handleShowInfo = () => {
@@ -42,9 +88,22 @@ export default function ProfileScreen() {
     setShowInfo(false);
   };
 
+  const showHistoryCharge = () => {
+    router.replace("/(history)/charge");
+  };
+
+  const showHistoryInvoice = () => {
+    router.replace("/(history)/invoice");
+  };
+
   const handleLogout = async () => {
     await logout();
   };
+
+  // Use Effect
+  useEffect(() => {
+    fetchStats();
+  }, []);
 
   // Mock
   const menuItems = [
@@ -60,29 +119,29 @@ export default function ProfileScreen() {
       title: "Lịch sử sạc",
       icon: "flash-outline",
       color: COLORS.success,
-      onPress: handleShowInfo,
+      onPress: showHistoryCharge,
     },
     {
       id: 3,
-      title: "Lịch sử thanh toán",
+      title: "Lịch sử giao dịch",
       icon: "card-outline",
       color: COLORS.warningDark,
-      onPress: handleShowInfo,
+      onPress: showHistoryInvoice,
     },
-    {
-      id: 4,
-      title: "Lịch sử gói đăng ký",
-      icon: "receipt-outline",
-      color: COLORS.danger,
-      onPress: handleShowInfo,
-    },
-    {
-      id: 5,
-      title: "Cài đặt",
-      icon: "settings-outline",
-      color: COLORS.inactiveDark,
-      onPress: handleShowInfo,
-    },
+    // {
+    //   id: 4,
+    //   title: "Lịch sử gói đăng ký",
+    //   icon: "receipt-outline",
+    //   color: COLORS.danger,
+    //   onPress: handleShowInfo,
+    // },
+    // {
+    //   id: 5,
+    //   title: "Cài đặt",
+    //   icon: "settings-outline",
+    //   color: COLORS.inactiveDark,
+    //   onPress: handleShowInfo,
+    // },
     // {
     //   id: 6,
     //   title: "Trợ giúp & Hỗ trợ",
@@ -93,6 +152,7 @@ export default function ProfileScreen() {
 
   return (
     <View style={styles.container}>
+      {/* Header */}
       <View style={styles.header}>
         <View style={styles.profileInfo}>
           <View style={styles.avatarContainer}>
@@ -110,23 +170,46 @@ export default function ProfileScreen() {
         style={styles.contentContainer}
         showsVerticalScrollIndicator={false}
       >
+        {/* Stats */}
         <View style={styles.statsContainer}>
           <View style={styles.statItem}>
-            <Text style={styles.statNumber}>15</Text>
+            <Text
+              style={styles.statNumber}
+              numberOfLines={1}
+              adjustsFontSizeToFit={true}
+              minimumFontScale={0.5}
+            >
+              {stats.count}
+            </Text>
             <Text style={styles.statLabel}>Lần sạc</Text>
           </View>
           <View style={styles.statDivider} />
           <View style={styles.statItem}>
-            <Text style={styles.statNumber}>2.5h</Text>
+            <Text
+              style={styles.statNumber}
+              numberOfLines={1}
+              adjustsFontSizeToFit={true}
+              minimumFontScale={0.5}
+            >
+              {stats.totalHours}
+            </Text>
             <Text style={styles.statLabel}>Thời gian sạc</Text>
           </View>
           <View style={styles.statDivider} />
           <View style={styles.statItem}>
-            <Text style={styles.statNumber}>250k</Text>
+            <Text
+              style={styles.statNumber}
+              numberOfLines={1}
+              adjustsFontSizeToFit={true}
+              minimumFontScale={0.5}
+            >
+              {stats.totalAmount}
+            </Text>
             <Text style={styles.statLabel}>Đã tiêu</Text>
           </View>
         </View>
 
+        {/* Menu */}
         <View style={styles.menuContainer}>
           {menuItems.map((item) => (
             <TouchableOpacity
@@ -158,6 +241,7 @@ export default function ProfileScreen() {
           ))}
         </View>
 
+        {/* Logout */}
         <TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>
           <Ionicons name="log-out-outline" size={20} color={COLORS.danger} />
           <Text style={styles.logoutText}>Đăng xuất</Text>
@@ -281,6 +365,7 @@ const styles = StyleSheet.create({
     padding: 20,
     flexDirection: "row",
     justifyContent: "space-around",
+
     shadowColor: COLORS.black,
     shadowOffset: {
       width: 0,
@@ -293,12 +378,16 @@ const styles = StyleSheet.create({
   statItem: {
     alignItems: "center",
     flex: 1,
+    minWidth: 0,
   },
   statNumber: {
-    fontSize: 24,
+    fontSize: 20,
     fontWeight: "bold",
     color: COLORS.secondary,
     marginBottom: 5,
+    flexShrink: 1,
+    minHeight: 24,
+    lineHeight: 24,
   },
   statLabel: {
     fontSize: 14,

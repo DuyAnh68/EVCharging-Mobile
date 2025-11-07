@@ -6,7 +6,7 @@ import {
 } from "@expo/vector-icons";
 import { COLORS, TEXTS } from "@src/styles/theme";
 import { VehicleDetail } from "@src/types/vehicle";
-import { formatDateTime } from "@src/utils/format";
+import { formatDateTime } from "@src/utils/formatData";
 import { useEffect, useState } from "react";
 import {
   Platform,

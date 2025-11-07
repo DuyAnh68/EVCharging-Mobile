@@ -1,7 +1,11 @@
 import { Ionicons } from "@expo/vector-icons";
 import { COLORS, TEXTS } from "@src/styles/theme";
 import { VehicleDetail } from "@src/types/vehicle";
-import { formatDateTime, formatDuration, formatVND } from "@src/utils/format";
+import {
+  formatDateTime,
+  formatDuration,
+  formatVND,
+} from "@src/utils/formatData";
 import { useEffect, useState } from "react";
 import {
   Modal,
