@@ -95,7 +95,7 @@ const Login = () => {
 
     const res = await login(form);
 
-    if (res.success) {
+    if (res.success && res.user) {
       setUser(res.user);
       setForm({
         email: "",

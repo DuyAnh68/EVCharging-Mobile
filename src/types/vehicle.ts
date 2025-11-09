@@ -9,6 +9,7 @@ export interface Vehicle {
   subscriptionId?: string | null;
   userId: string;
   companyId?: string | null;
+  isActive: boolean;
 }
 
 export interface VehicleDetail extends Vehicle {
@@ -30,17 +31,23 @@ export type VehicleForm = {
   subscriptionId?: string | null;
 };
 
-type CreateVehicleSuccess = {
+type PostVehicleSuccess = {
   success: true;
   vehicle: any;
   subscription?: any;
 };
 
-type CreateVehicleError = {
+type PostVehicleError = {
   success: false;
-  step: "createVehicle" | "createSubscription" | "unknown" | "pendingPayment";
+  step:
+    | "createVehicle"
+    | "updateVehicle"
+    | "createSubscription"
+    | "pendingPayment"
+    | "createUrl"
+    | "unknown";
   message: string;
   vehicle?: any;
 };
 
-export type CreateVehicleResponse = CreateVehicleSuccess | CreateVehicleError;
+export type PostVehicleResponse = PostVehicleSuccess | PostVehicleError;

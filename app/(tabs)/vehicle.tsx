@@ -11,6 +11,7 @@ import { useVehicle } from "@src/hooks/useVehicle";
 import { COLORS, TEXTS } from "@src/styles/theme";
 import { SubscriptionPlan } from "@src/types/subscription";
 import { VehicleDetail } from "@src/types/vehicle";
+import { useFocusEffect, useLocalSearchParams } from "expo-router";
 import React, { useCallback, useEffect, useState } from "react";
 import {
   FlatList,
@@ -45,7 +46,12 @@ export default function VehicleScreen() {
   const { getSubPlans } = useSubscription();
   const { isLoading } = useLoading();
   const { user } = useAuthContext();
-  const { paymentResult, setPaymentResult } = usePayment();
+  const { paymentResult, setPaymentResult, isBack, setIsBack } = usePayment();
+
+  // Param
+  const { type } = useLocalSearchParams<{
+    type: string;
+  }>();
 
   // Api
   const fetchVehicles = useCallback(async () => {
@@ -101,13 +107,8 @@ export default function VehicleScreen() {
     setShowSuccess(true);
 
     setTimeout(() => {
-      fetchData();
+      fetchVehicles();
     }, 3100);
-  };
-
-  const handleError = (message: string) => {
-    setErrorMsg(message);
-    setShowError(true);
   };
 
   const handleCloseForm = () => {
@@ -174,19 +175,39 @@ export default function VehicleScreen() {
     fetchData();
   }, []);
 
-  useEffect(() => {
-    if (paymentResult === "success") {
-      fetchData();
-      setPaymentResult(null);
-    }
-    if (paymentResult === "failed") {
-      setMsg(
-        "Xe của bạn đã được tạo nhưng thanh toán gói thất bại. Vui lòng thử đăng ký gói lại sau."
-      );
-      setShowMsg(true);
-      fetchData();
-    }
-  }, [paymentResult]);
+  // UseFocusEffect
+  useFocusEffect(
+    useCallback(() => {
+      // Kiểm tra paymentResult chỉ khi screen này được focus
+      if (paymentResult === "success") {
+        if (type === "createSub") {
+          setSuccessMsg("Thêm xe thành công!");
+        } else {
+          setSuccessMsg("Cập nhật xe thành công!");
+        }
+
+        setShowSuccess(true);
+
+        // Delay fetchVehicles để modal có cơ hội hiển thị
+        setTimeout(() => {
+          fetchVehicles();
+        }, 3100);
+
+        setPaymentResult(null);
+      }
+
+      if (paymentResult === "failed" || isBack) {
+        setMsg(
+          "Xe của bạn đã được thêm nhưng thanh toán gói thất bại. Vui lòng đăng ký gói lại sau."
+        );
+        setShowMsg(true);
+        setPaymentResult(null);
+        setIsBack(false);
+
+        fetchVehicles();
+      }
+    }, [paymentResult, isBack])
+  );
 
   // Render card
   const renderVehicleItem = ({ item }: { item: VehicleDetail }) => (
@@ -261,7 +282,6 @@ export default function VehicleScreen() {
             onSuccess={(message) => {
               handleSuccess(message);
             }}
-            onError={handleError}
           />
         </>
       )}
@@ -284,7 +304,7 @@ export default function VehicleScreen() {
           visible={showDelete}
           mode="confirm"
           titleText="Xác nhận xóa"
-          contentText={`Bạn có muốn xóa xe có biển số "${selectedVehicle.plateNumber}" không?`}
+          contentText={`Khi xóa sẽ mất luôn gói đăng ký (nếu có). Bạn có chắc chắn muốn xóa xe có biển số "${selectedVehicle.plateNumber}" không?`}
           icon={<Ionicons name="trash" size={30} color={COLORS.white} />}
           iconBgColor="red"
           confirmBtnText="Xóa"

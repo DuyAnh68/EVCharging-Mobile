@@ -12,6 +12,7 @@ export default function RootLayout() {
         <LoadingProvider>
           <AuthProvider>
             <PaymentProvider>
+              {/* <DeepLinkHandler /> */}
               <Stack
                 screenOptions={{
                   headerShown: false,
