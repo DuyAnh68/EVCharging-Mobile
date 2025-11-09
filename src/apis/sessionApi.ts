@@ -40,6 +40,7 @@ export const sessionApi = {
       params: {
         user_id: userId,
         status: "completed",
+        limit: 50,
       },
     });
     return {

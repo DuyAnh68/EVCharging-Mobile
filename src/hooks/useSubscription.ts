@@ -1,4 +1,5 @@
 import { useLoading } from "@src/context/LoadingContext";
+import { usePayment } from "@src/context/PaymentContext";
 import { subscriptionService } from "@src/services/subscriptionService";
 import {
   PayForSubReq,
@@ -6,11 +7,11 @@ import {
   UpdateSubReq,
 } from "@src/types/subscription";
 import { mapErrorMsg } from "@src/utils/errorMsgMapper";
-import * as Linking from "expo-linking";
-import * as WebBrowser from "expo-web-browser";
+import { router } from "expo-router";
 
 export const useSubscription = () => {
   const { showLoading, hideLoading } = useLoading();
+  const { setPaymentUrl, setType } = usePayment();
 
   // GET LIST
   const getSubPlans = async () => {
@@ -82,7 +83,7 @@ export const useSubscription = () => {
   };
 
   // PAYMENT
-  const payForSubscription = async (payload: PayForSubReq) => {
+  const createPaymentUrl = async (payload: PayForSubReq) => {
     try {
       const res = await subscriptionService.payForSubscription(payload);
 
@@ -99,31 +100,19 @@ export const useSubscription = () => {
     }
   };
 
-  const handleVNPayPayment = async (paymentUrl: string) => {
-    const redirectUrl = Linking.createURL("vnpay/subscription");
+  const navigateVNPay = async (paymentUrl: string, isUpdate?: boolean) => {
+    setPaymentUrl(paymentUrl);
+    setType(isUpdate ? "updateSub" : "createSub");
 
-    const result = await WebBrowser.openAuthSessionAsync(
-      paymentUrl,
-      redirectUrl
-    );
-
-    if (result.type === "success") {
-      // URL trả về sau khi thanh toán
-      const { url } = result;
-      console.log("VNPay callback URL:", url);
-
-      const data = Linking.parse(url);
-      const { status, vehicleSubscriptionId } = data.queryParams || {};
-
-      if (status === "success") {
-        console.log("Thanh toán thành công:", vehicleSubscriptionId);
-      } else {
-        console.log("Thanh toán thất bại");
-      }
-    } else {
-      console.log("Người dùng đóng cửa sổ thanh toán");
-    }
+    setTimeout(() => {
+      router.push({
+        pathname: "/(vnpay)/payment-webview",
+        params: {
+          type: isUpdate ? "updateSub" : "createSub",
+        },
+      });
+    }, 5);
   };
 
-  return { getSubPlans, create, update, payForSubscription, handleVNPayPayment };
+  return { getSubPlans, create, update, createPaymentUrl, navigateVNPay };
 };

@@ -41,6 +41,7 @@ const FilterStatus: React.FC<FilterStatusProps> = ({
     disabled: boolean = false
   ) => {
     const isSelected = selected === value;
+    const isPaidDisabled = disabled && value === "paid";
 
     return (
       <TouchableOpacity
@@ -51,11 +52,11 @@ const FilterStatus: React.FC<FilterStatusProps> = ({
             backgroundColor: `${bgColor}15`,
             borderLeftColor: bgColor,
           },
-          disabled && { opacity: 0.5 },
+          isPaidDisabled && { opacity: 0.5 },
         ]}
         onPress={() => onSelect(value)}
         disabled={disabled}
-        activeOpacity={disabled ? 0.5 : 0.7}
+        activeOpacity={isPaidDisabled ? 0.5 : disabled ? 1 : 0.7}
       >
         <Text style={styles.filterLabel}>{title}</Text>
         <Text style={[styles.filterCount, isSelected && { color: bgColor }]}>
@@ -78,7 +79,7 @@ const FilterStatus: React.FC<FilterStatusProps> = ({
           filter.value,
           filter.summary,
           filter.color,
-          isPayment && filter.value === "paid"
+          isPayment
         )
       )}
     </View>

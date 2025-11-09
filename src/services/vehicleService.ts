@@ -1,10 +1,16 @@
 import { vehicleRepo } from "@src/repositories/vehicleRepo";
-import { VehicleReq } from "@src/types/vehicle";
+import { VehicleDetail, VehicleReq } from "@src/types/vehicle";
 
 export const vehicleService = {
   // Get List
   getVehicles: async () => {
-    return await vehicleRepo.getVehicles();
+    const res = await vehicleRepo.getVehicles();
+
+    const activeVehicles: VehicleDetail[] = (res.data || []).filter(
+      (vehicle) => vehicle.isActive === true
+    );
+
+    return { ...res, data: activeVehicles };
   },
 
   // Create

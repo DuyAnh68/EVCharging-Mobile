@@ -17,7 +17,11 @@ export const invoiceApi = {
 
   // Get Detail
   getInvoiceDetail: async (invoiceId: string) => {
-    const res = await axiosClient.get(`/invoices/${invoiceId}`);
+    const res = await axiosClient.get(`/invoices/${invoiceId}`, {
+      params: {
+        limit: 50,
+      },
+    });
     return {
       status: res.status,
       data: res.data,

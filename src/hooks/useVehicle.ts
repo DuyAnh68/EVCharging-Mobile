@@ -1,8 +1,8 @@
 import { useLoading } from "@src/context/LoadingContext";
 import { useSubscription } from "@src/hooks/useSubscription";
 import { vehicleService } from "@src/services/vehicleService";
-import { PayForSubReq, SubVehicleReq } from "@src/types/subscription";
-import { CreateVehicleResponse } from "@src/types/vehicle";
+import { PayForSubReq } from "@src/types/subscription";
+import { PostVehicleResponse } from "@src/types/vehicle";
 import { mapErrorMsg } from "@src/utils/errorMsgMapper";
 import { toVehiclePayload } from "@src/utils/mapData";
 import { useState } from "react";
@@ -13,8 +13,8 @@ export const useVehicle = () => {
   const {
     create: createSub,
     update: updateSub,
-    payForSubscription,
-    handleVNPayPayment,
+    createPaymentUrl,
+    navigateVNPay,
   } = useSubscription();
 
   // State
@@ -45,19 +45,28 @@ export const useVehicle = () => {
   };
 
   // CREATE
-  const create = async (payload: any): Promise<CreateVehicleResponse> => {
+  const create = async (payload: any): Promise<PostVehicleResponse> => {
     setIsLoading(true);
 
     try {
       // 1. Tạo xe
       const vehiclePayload = toVehiclePayload(payload);
-      const resVehicle = await vehicleService.create(vehiclePayload);
+      let createdVehicle;
 
-      if (![200, 201].includes(resVehicle.status)) {
-        throw { step: "createVehicle", message: "Tạo xe thất bại!" };
+      try {
+        const resVehicle = await vehicleService.create(vehiclePayload);
+
+        if (![200, 201].includes(resVehicle.status)) {
+          throw { step: "createVehicle", message: "Tạo xe thất bại!" };
+        }
+
+        createdVehicle = resVehicle.data;
+      } catch (err: any) {
+        throw {
+          step: "createVehicle",
+          message: "Tạo xe thất bại do biển số đã tồn tại.",
+        };
       }
-
-      const createdVehicle = resVehicle.data;
 
       // 2. Nếu có gói đăng ký thì tiếp tục
       if (payload.subscriptionId) {
@@ -69,26 +78,26 @@ export const useVehicle = () => {
           payment_status: "pending",
         };
 
-        const resSub = await payForSubscription(subPayload);
+        const resSub = await createPaymentUrl(subPayload);
 
         if (!resSub.success) {
-          throw {
-            step: "createSub",
-            message: resSub.message || "Đăng ký gói thất bại!",
+          return {
+            success: false,
+            message:
+              "Tạo phiên thanh toán thất bại. Vui lòng mua lại gói đăng ký sau.",
+            step: "createUrl",
           };
         }
 
         const paymentUrl = resSub.data;
         if (paymentUrl) {
-          await handleVNPayPayment(paymentUrl);
+          await navigateVNPay(paymentUrl, false);
 
           return {
             success: false,
             message: "Đang chờ thanh toán VNPay...",
             step: "pendingPayment",
           };
-        } else {
-          console.warn("Không có paymentUrl trả về từ server!");
         }
       }
 
@@ -136,42 +145,59 @@ export const useVehicle = () => {
         batteryCapacity: payload.batteryCapacity,
       });
 
-      const resVehicle = await vehicleService.update(
-        payload.vehicleId,
-        vehiclePayload
-      );
+      let updatedVehicle;
 
-      if (![200, 201].includes(resVehicle.status)) {
-        throw { step: "updateVehicle", message: "Cập nhật xe thất bại!" };
+      try {
+        const resVehicle = await vehicleService.update(
+          payload.vehicleId,
+          vehiclePayload
+        );
+
+        if (![200, 201].includes(resVehicle.status)) {
+          throw { step: "updateVehicle", message: "Cập nhật xe thất bại!" };
+        }
+
+        updatedVehicle = resVehicle.data;
+      } catch (err: any) {
+        throw {
+          step: "updateVehicle",
+          message: "Cập nhật xe thất bại do biển số đã tồn tại.",
+        };
       }
-
-      const updatedVehicle = resVehicle.data;
 
       // 2. Cập nhật gói đăng ký
       if (payload.isUpdateSub) {
         if (payload.preSubId === null || payload.preSubId === undefined) {
           // 2.1 Nếu trước đó chưa có gói
-          const subPayload: SubVehicleReq = {
+          const subPayload: PayForSubReq = {
+            userId: payload.userId,
             vehicle_id: payload.vehicleId,
             subscription_id: payload.subId,
-            auto_renew: payload.autoRenew ?? false,
+            amount: payload.amount,
             payment_status: "pending",
           };
 
-          const resSub = await createSub(subPayload);
+          const resSub = await createPaymentUrl(subPayload);
 
           if (!resSub.success) {
-            throw {
-              step: "createSub",
-              message: resSub.message || "Đăng ký gói thất bại!",
+            return {
+              success: false,
+              message:
+                "Tạo phiên thanh toán thất bại. Vui lòng mua lại gói đăng ký sau.",
+              step: "createUrl",
             };
           }
 
-          return {
-            success: true,
-            vehicle: updatedVehicle,
-            subscription: resSub.data,
-          };
+          const paymentUrl = resSub.data;
+          if (paymentUrl) {
+            await navigateVNPay(paymentUrl, true);
+
+            return {
+              success: false,
+              message: "Đang chờ thanh toán VNPay...",
+              step: "pendingPayment",
+            };
+          }
         } else {
           // 2.2 Nếu trước đó có gói
           const resSub = await updateSub(payload.preSubId, payload.subId);
@@ -234,9 +260,12 @@ export const useVehicle = () => {
         data: res.data,
       };
     } catch (error: any) {
+      const message = error.response?.data?.message || error.customMessage;
+      const status = error?.response?.status;
+      const viMessage = mapErrorMsg(message, status);
       return {
         success: false,
-        message: "Xóa xe thất bại!",
+        message: viMessage || "Xóa xe thất bại!",
       };
     } finally {
       hideLoading();

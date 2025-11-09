@@ -4,7 +4,11 @@ import { VehicleReq } from "@src/types/vehicle";
 export const vehicleApi = {
   // Get List
   getVehicles: async () => {
-    const res = await axiosClient.get(`/vehicles/me`);
+    const res = await axiosClient.get(`/vehicles/me`, {
+      params: {
+        limit: 50,
+      },
+    });
     return {
       status: res.status,
       data: res.data,

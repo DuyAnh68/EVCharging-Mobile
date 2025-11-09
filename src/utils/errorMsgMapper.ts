@@ -12,6 +12,7 @@ type ErrorMappingKey =
   | "phone"
   | "invalid email or password"
   | "refresh token"
+  | "delete vehicle"
   | "default";
 
 const errorMessageMap: Record<ErrorMappingKey, string> = {
@@ -28,6 +29,7 @@ const errorMessageMap: Record<ErrorMappingKey, string> = {
   phone: "Số điện thoại đã được đăng ký.",
   "invalid email or password": "Email hoặc mật khẩu không đúng.",
   "refresh token": "Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại!",
+  "delete vehicle": "Không thể xóa xe vì có hóa đơn chưa thanh toán!",
   default: "Đã xảy ra lỗi, vui lòng thử lại.",
 };
 
@@ -48,6 +50,8 @@ export const mapErrorMsg = (message?: string, statusCode?: number): string => {
     if (lowerMsg.includes("username")) return errorMessageMap.username;
     if (lowerMsg.includes("refresh token"))
       return errorMessageMap["refresh token"];
+    if (lowerMsg.includes("delete vehicle"))
+      return errorMessageMap["delete vehicle"];
   } else {
     // Nếu status code là các lỗi phổ biến
     if (statusCode === 400) return errorMessageMap.validation;

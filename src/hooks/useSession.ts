@@ -85,6 +85,7 @@ export const useSession = () => {
   const getSessionsCompleted = async (userId: string) => {
     try {
       showLoading();
+  
       const resSession = await sessionService.getSessionsCompleted(userId);
 
       const isSuccess = resSession.status === 200 || resSession.status === 201;
