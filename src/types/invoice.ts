@@ -47,6 +47,7 @@ export interface InvoiceDetail {
     model: string;
     plateNumber: string;
     batteryCapacity: string;
+    isActive: boolean;
   };
   session: {
     startTime: string;
@@ -72,3 +73,9 @@ export interface InvoiceDetail {
     status: PaymentStatus;
   };
 }
+
+export type PayForChargingReq = {
+  userId: string;
+  invoiceIds: string[];
+  amount: number;
+};

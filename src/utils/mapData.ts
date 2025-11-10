@@ -216,6 +216,7 @@ export const toInvoiceDetail = (data: any): InvoiceDetail => ({
     model: data.vehicle_info.model,
     plateNumber: data.vehicle_info.plate_number,
     batteryCapacity: data.vehicle_info.battery_capacity,
+    isActive: data.vehicle_info.is_active,
   },
   session: {
     startTime: data.charging_session.start_time,

@@ -1,4 +1,5 @@
-import { formatTimeDuration } from "@src/utils/formatData";
+import { Invoice } from "@src/types/invoice";
+import { formatRoundedAmount, formatTimeDuration } from "@src/utils/formatData";
 
 // CHARGE
 export const calcChargingDuration = (startTime: string, endTime: string) => {
@@ -79,4 +80,15 @@ export const calcSecondsToDuration = (input: number | string): string => {
   const seconds = totalSeconds % 60;
 
   return formatTimeDuration(hours, minutes, seconds);
+};
+
+// INVOICE
+/**
+ * Tính tổng tiền của các hóa đơn được chọn.
+ */
+export const calcTotalAmount = (selectedInvoices: Invoice[]): number => {
+  return selectedInvoices.reduce((total, inv) => {
+    const rounded = formatRoundedAmount(inv.totalAmount);
+    return total + rounded;
+  }, 0);
 };

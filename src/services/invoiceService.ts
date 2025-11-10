@@ -1,4 +1,5 @@
 import { invoiceRepo } from "@src/repositories/invoiceRepo";
+import { PayForChargingReq } from "@src/types/invoice";
 
 export const invoiceService = {
   // Get List
@@ -9,5 +10,10 @@ export const invoiceService = {
   // Get Detail
   getInvoiceDetail: async (invoiceId: string) => {
     return await invoiceRepo.getInvoiceDetail(invoiceId);
+  },
+
+  // Create Payment Url
+  createPaymentUrl: async (payload: PayForChargingReq) => {
+    return await invoiceRepo.createPaymentUrl(payload);
   },
 };
