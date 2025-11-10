@@ -3,7 +3,7 @@ import { Background } from "@src/components/AppBg";
 import { useAuthContext } from "@src/context/AuthContext";
 import { useBooking } from "@src/hooks/useBooking";
 import { COLORS } from "@src/styles/theme";
-import { router, useLocalSearchParams } from "expo-router";
+import { useLocalSearchParams } from "expo-router";
 import { Calendar, CheckCircle, Clock } from "lucide-react-native";
 import React, { useEffect, useMemo, useState } from "react";
 import {
@@ -20,7 +20,7 @@ export default function BookingScreen() {
   const { stationId, vehicleId, booking, chargingPoint } =
     useLocalSearchParams();
   console.log(vehicleId);
-  const { createBooking } = useBooking();
+  const { createBooking, payForBaseFee } = useBooking();
   const { user } = useAuthContext();
   console.log(booking);
 
@@ -130,7 +130,6 @@ export default function BookingScreen() {
     const start = toVietnamDate(dateStr, first.start.padStart(5, "0"));
     const end = toVietnamDate(dateStr, last.end.padStart(5, "0"));
 
-    // ✅ Giờ hiện tại theo múi giờ Việt Nam (UTC+7)
     const now = new Date();
     const nowVN = new Date(
       now.getTime() + now.getTimezoneOffset() * 60000 + 7 * 3600000
@@ -139,7 +138,7 @@ export default function BookingScreen() {
     if (start <= nowVN) {
       Alert.alert(
         "Thời gian không hợp lệ",
-        "Vui lòng chọn ngày và giờ trong tương lai."
+        "Vui lòng chọn ngày trong tương lai."
       );
       return;
     }
@@ -157,13 +156,35 @@ export default function BookingScreen() {
     };
 
     try {
+      // 1️⃣ Tạo booking
       const res = await createBooking(bookingReq);
+
       if (res?.success) {
-        Alert.alert(
-          "Đặt chỗ thành công",
-          `Bạn đã đặt từ ${first.start} đến ${last.end} ngày ${dateStr}`,
-          [{ text: "OK", onPress: () => router.replace("/") }]
-        );
+        const bookingData = res.data?.booking;
+        const bookingId = bookingData?.id;
+        const baseFee = bookingData?.booking_fee?.booking_fee;
+
+        if (!bookingId || baseFee == null) {
+          Alert.alert("Lỗi", "Không tìm thấy thông tin phí đặt chỗ.");
+          return;
+        }
+
+        // ✅ Tính tổng phí theo số slot
+        const totalFee = baseFee * selectedSlots.length;
+
+        // 2️⃣ Thanh toán phí đặt chỗ
+        const payRes = await payForBaseFee({
+          amount: totalFee,
+          userId: user?.userId,
+          booking_id: bookingId,
+        });
+
+        console.log("payres:", payRes);
+
+        if (payRes?.success && payRes?.data) {
+          const paymentUrl = payRes.data;
+          console.log("paymentUrl", paymentUrl);
+        }
       } else {
         Alert.alert("Thất bại", res?.message || "Không thể đặt chỗ.");
       }

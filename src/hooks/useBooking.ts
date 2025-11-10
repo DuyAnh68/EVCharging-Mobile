@@ -6,7 +6,6 @@ import { mapErrorMsg } from "@src/utils/errorMsgMapper";
 export const useBooking = () => {
   const { showLoading, hideLoading } = useLoading();
 
-  // CREATE BOOKING
   const createBooking = async (payload: BookingReq) => {
     try {
       showLoading();
@@ -30,7 +29,6 @@ export const useBooking = () => {
     }
   };
 
-  // GET ALL BOOKINGS
   const getAllBookingsFilterChargingPoints = async (
     chargingPointId: string
   ) => {
@@ -76,10 +74,12 @@ export const useBooking = () => {
     }
   };
 
-  const getAllMyBooking = async () => {
+  const getAllMyBooking = async (userId: string) => {
+    console.log(userId);
     showLoading();
     try {
-      const res = await bookingService.getAllMyBooking();
+      const res = await bookingService.getAllMyBooking(userId);
+      console.log(res);
       const isSuccess = res.status === 200 || res.status === 201;
       return {
         success: isSuccess,
@@ -144,6 +144,38 @@ export const useBooking = () => {
     }
   };
 
+  const payForBaseFee = async (
+    amount: number,
+    userId: string,
+    bookingId: string
+  ) => {
+    console.log("amount", amount);
+
+    try {
+      showLoading();
+      const data = await bookingService.payForBaseFee(
+        amount.amount,
+        amount.userId,
+        amount.bookingId
+      );
+      return {
+        success: true,
+        data,
+        message: "Thanh toán phí đặt chỗ thành công!",
+      };
+    } catch (error: any) {
+      const message = error.response?.data?.message || error.customMessage;
+      const status = error?.response?.status;
+      const viMessage = mapErrorMsg(message, status);
+      return {
+        success: false,
+        message: viMessage || "Thanh toán thất bại!",
+      };
+    } finally {
+      hideLoading();
+    }
+  };
+
   return {
     createBooking,
     getAllBookingsFilterChargingPoints,
@@ -151,5 +183,6 @@ export const useBooking = () => {
     updateBooking,
     deleteBooking,
     getAllMyBooking,
+    payForBaseFee,
   };
 };

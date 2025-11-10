@@ -1,3 +1,4 @@
+import { useAuthContext } from "@src/context/AuthContext";
 import { useBooking } from "@src/hooks/useBooking";
 import { COLORS } from "@src/styles/theme";
 import { LinearGradient } from "expo-linear-gradient";
@@ -49,12 +50,27 @@ const Session = () => {
   const [myBooking, setMyBooking] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
+  const { user } = useAuthContext();
 
   const fetchMyBooking = async () => {
     try {
-      const res = await getAllMyBooking();
-      if (res?.success && res?.data?.bookings) {
-        setMyBooking(res.data.bookings);
+      const res = await getAllMyBooking(user?.userId);
+      if (res?.success && res?.data) {
+        const now = new Date();
+
+        // map lại dữ liệu để thêm "expired" cho các booking đã hết hạn
+        const updatedData = res.data.map((booking: BookingItem) => {
+          const endTime = new Date(booking.end_time);
+          if (
+            booking.status === "pending" && // chỉ gắn expired nếu vẫn đang chờ
+            endTime < now
+          ) {
+            return { ...booking, status: "expired" };
+          }
+          return booking;
+        });
+
+        setMyBooking(updatedData);
       }
     } catch (err) {
       console.error("Error fetching bookings:", err);
@@ -63,6 +79,7 @@ const Session = () => {
       setRefreshing(false);
     }
   };
+
   useEffect(() => {
     fetchMyBooking();
   }, []);
@@ -126,6 +143,13 @@ const Session = () => {
           icon: XCircle,
           bg: "#fee2e2",
           label: "Đã hủy",
+        };
+      case "expired":
+        return {
+          color: "#9ca3af",
+          icon: Clock,
+          bg: "#f3f4f6",
+          label: "Hết hạn",
         };
       default:
         return {
