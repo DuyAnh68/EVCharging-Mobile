@@ -16,6 +16,7 @@ export const toVehicleDetail = (data: any): VehicleDetail => ({
   batteryCapacity: data.batteryCapacity,
   subscriptionId: data.vehicle_subscription_id?._id ?? null,
   userId: data.user_id?._id ?? "",
+  isActive: data.isActive,
   companyId: data.company_id?._id ?? null,
   company: data.company_id
     ? {
@@ -92,15 +93,27 @@ export const toSessionDetail = (data: any): SessionDetail => ({
     currentSessionId: data.chargingPoint_id.current_session_id,
     createdAt: data.chargingPoint_id.create_at,
   },
-  vehicle: {
-    id: data.vehicle_id._id,
-    plateNumber: data.vehicle_id.plate_number,
-    model: data.vehicle_id.model,
-    batteryCapacity: data.vehicle_id.batteryCapacity,
-    subscriptionId: data.vehicle_id.vehicle_subscription_id,
-    userId: data.vehicle_id.user_id,
-    companyId: data.vehicle_id.company_id,
-  },
+  vehicle: data.vehicle_id
+    ? {
+        id: data.vehicle_id._id,
+        plateNumber: data.vehicle_id.plate_number,
+        model: data.vehicle_id.model,
+        batteryCapacity: data.vehicle_id.batteryCapacity,
+        subscriptionId: data.vehicle_id.vehicle_subscription_id,
+        userId: data.vehicle_id.user_id,
+        companyId: data.vehicle_id.company_id,
+        isActive: data.vehicle_id.isActive,
+      }
+    : {
+        id: "",
+        plateNumber: "",
+        model: "",
+        batteryCapacity: 0,
+        subscriptionId: null,
+        userId: null,
+        companyId: null,
+        isActive: false,
+      },
   startTime: data.start_time,
   endTime: data.end_time,
   status: data.status,

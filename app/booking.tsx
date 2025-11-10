@@ -20,7 +20,7 @@ export default function BookingScreen() {
   const { stationId, vehicleId, booking, chargingPoint } =
     useLocalSearchParams();
   console.log(vehicleId);
-  const { createBooking, payForBaseFee } = useBooking();
+  const { createBooking, payForBaseFee, navigateVNPay } = useBooking();
   const { user } = useAuthContext();
   console.log(booking);
 
@@ -184,6 +184,7 @@ export default function BookingScreen() {
         if (payRes?.success && payRes?.data) {
           const paymentUrl = payRes.data;
           console.log("paymentUrl", paymentUrl);
+          await navigateVNPay(paymentUrl);
         }
       } else {
         Alert.alert("Thất bại", res?.message || "Không thể đặt chỗ.");
@@ -201,7 +202,6 @@ export default function BookingScreen() {
       year: "numeric",
     });
 
-  // ✅ Render UI
   return (
     <Background>
       <ScrollView contentContainerStyle={styles.container}>

@@ -11,7 +11,8 @@ export default function VNPayLayout() {
           animation: "fade",
         }}
       >
-        <Stack.Screen name="subscription" options={{ headerShown: false }} />
+        <Stack.Screen name="payment-webview" options={{ headerShown: false }} />
+        <Stack.Screen name="result" options={{ headerShown: false }} />
       </Stack>
     </Background>
   );

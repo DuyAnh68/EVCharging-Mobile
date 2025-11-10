@@ -1,10 +1,13 @@
 import { useLoading } from "@src/context/LoadingContext";
+import { usePayment } from "@src/context/PaymentContext";
 import { bookingService } from "@src/services/bookingService";
 import { BookingReq } from "@src/types/booking";
 import { mapErrorMsg } from "@src/utils/errorMsgMapper";
+import { router } from "expo-router";
 
 export const useBooking = () => {
   const { showLoading, hideLoading } = useLoading();
+  const { setPaymentUrl } = usePayment();
 
   const createBooking = async (payload: BookingReq) => {
     try {
@@ -176,6 +179,19 @@ export const useBooking = () => {
     }
   };
 
+  const navigateVNPay = async (paymentUrl: string) => {
+    setPaymentUrl(paymentUrl);
+
+    setTimeout(() => {
+      router.push({
+        pathname: "/(vnpay)/payment-webview",
+        params: {
+          type: "booking",
+        },
+      });
+    }, 5);
+  };
+
   return {
     createBooking,
     getAllBookingsFilterChargingPoints,
@@ -184,5 +200,6 @@ export const useBooking = () => {
     deleteBooking,
     getAllMyBooking,
     payForBaseFee,
+    navigateVNPay,
   };
 };

@@ -1,6 +1,7 @@
-import { Ionicons, MaterialIcons } from "@expo/vector-icons";
+import { FontAwesome5, Ionicons, MaterialIcons } from "@expo/vector-icons";
 import Button from "@src/components/Button";
 import LoadingOverlay from "@src/components/LoadingOverlay";
+import ModalPopup from "@src/components/ModalPopup";
 import SubPlanModal from "@src/components/vehicle/SubPlanModal";
 import { useVehicle } from "@src/hooks/useVehicle";
 import { COLORS, TEXTS } from "@src/styles/theme";
@@ -31,7 +32,6 @@ type Props = {
   subPlans: SubscriptionPlan[];
   onClose: () => void;
   onSuccess: (message: string) => void;
-  onError: (message: string) => void;
 };
 
 const Form = ({
@@ -42,7 +42,6 @@ const Form = ({
   subPlans,
   onClose,
   onSuccess,
-  onError,
 }: Props) => {
   // State
   const [form, setForm] = useState<VehicleForm>({
@@ -64,6 +63,10 @@ const Form = ({
   const [vehicleId, setVehicleId] = useState<string | null>(null);
   const [preSubId, setPreSubId] = useState<string | null>(null);
   const [isUpdateSub, setIsUpdateSub] = useState<boolean>(false);
+  const [showBuyPlanConfirm, setShowBuyPlanConfirm] = useState<boolean>(false);
+  const [showError, setShowError] = useState<boolean>(false);
+  const [errorMsg, setErrorMsg] = useState<string>("");
+  const [errorStep, setErrorStep] = useState<string | null>(null);
 
   // Hook
   const { create, update, isLoading } = useVehicle();
@@ -120,6 +123,34 @@ const Form = ({
     resetForm();
   };
 
+  const handleShowBuyPlanConfirm = () => {
+    const shouldConfirm =
+      (mode === "create" && selectedPlan) || (mode === "edit" && isUpdateSub);
+
+    if (shouldConfirm) {
+      setShowBuyPlanConfirm(true);
+    } else {
+      if (mode === "create") {
+        handleCreate();
+      } else {
+        handleUpdate();
+      }
+    }
+  };
+
+  const handleBuyPlanConfirm = () => {
+    setShowBuyPlanConfirm(false);
+    if (mode === "create") {
+      handleCreate();
+    } else {
+      handleUpdate();
+    }
+  };
+
+  const handleCloseBuyPlanConfirm = () => {
+    setShowBuyPlanConfirm(false);
+  };
+
   const handleCreate = async () => {
     if (!isFormValid()) return;
 
@@ -134,10 +165,23 @@ const Form = ({
 
     const res = await create(payload);
 
-    if (!res.success && res.step === "pendingPayment") {
-      console.log("Đang mở VNPay - người dùng sẽ quay lại sau thanh toán");
-      handleClose();
-      return;
+    if (!res.success) {
+      if (res.step === "pendingPayment") {
+        setTimeout(() => {
+          handleClose();
+        }, 5);
+
+        return;
+      } else if (res.step === "createUrl") {
+        setErrorMsg(res.message);
+        setShowError(true);
+        setErrorStep("createUrl");
+        return;
+      } else {
+        setErrorMsg(res.message);
+        setShowError(true);
+        return;
+      }
     }
 
     if (res.success) {
@@ -145,8 +189,6 @@ const Form = ({
       handleClose();
       return;
     }
-
-    onError(res.message);
   };
 
   const handleUpdate = async () => {
@@ -161,18 +203,44 @@ const Form = ({
       isUpdateSub: isUpdateSub,
       preSubId: preSubId,
       subId: selectedPlan,
+      amount: selectedPlanData?.price,
     };
 
     const res = await update(payload);
+
+    if (!res.success) {
+      if (res.step === "pendingPayment") {
+        setTimeout(() => {
+          handleClose();
+        }, 5);
+
+        return;
+      } else if (res.step === "createUrl") {
+        setErrorMsg(res.message);
+        setShowError(true);
+        setErrorStep("createUrl");
+        return;
+      } else {
+        setErrorMsg(res.message);
+        setShowError(true);
+        return;
+      }
+    }
 
     if (res.success) {
       onSuccess("Cập nhật xe thành công!");
       handleClose();
       return;
     }
+  };
 
-    onError(res.message);
-    handleClose();
+  const handleErrorConfirm = () => {
+    if (errorStep === "createUrl") {
+      handleClose();
+    }
+    setShowError(false);
+    setErrorMsg("");
+    setErrorStep(null);
   };
 
   // Reset form
@@ -190,6 +258,7 @@ const Form = ({
     setPreSubId(null);
     setIsUpdateSub(false);
     setIsUnselectedPlan(false);
+    setErrorStep(null);
   };
 
   // Check
@@ -345,7 +414,7 @@ const Form = ({
                         shadowColor: "red",
                       },
                     ]}
-                    placeholder="VD: 1.5"
+                    placeholder="VD: 51.5"
                     placeholderTextColor={TEXTS.placeholder}
                     keyboardType="decimal-pad"
                     value={form.batteryCapacity}
@@ -579,11 +648,7 @@ const Form = ({
                   text={mode === "create" ? "Tạo thêm" : "Cập nhật"}
                   colorType={isFormValid() ? "primary" : "grey"}
                   onPress={() => {
-                    if (mode === "create") {
-                      handleCreate();
-                    } else {
-                      handleUpdate();
-                    }
+                    handleShowBuyPlanConfirm();
                   }}
                   disabled={!isFormValid()}
                   width={300}
@@ -604,6 +669,41 @@ const Form = ({
           onClose={() => {
             setShowPlans(false);
           }}
+        />
+      )}
+
+      {/* Confirm Modal */}
+      {showBuyPlanConfirm && (
+        <ModalPopup
+          visible={showBuyPlanConfirm}
+          mode="confirm"
+          titleText="Xác nhận mua gói đăng ký"
+          contentText="Khi mua gói đăng ký, bạn sẽ không thể thay đổi hoặc hủy gói cho đến khi hết thời hạn của gói."
+          icon={<FontAwesome5 name="exclamation" size={30} color="white" />}
+          iconBgColor="yellow"
+          confirmBtnText="Mua"
+          confirmBtnColor="green"
+          cancelBtnText="Đóng"
+          cancelBtnColor="grey"
+          onClose={handleCloseBuyPlanConfirm}
+          onConfirm={handleBuyPlanConfirm}
+          modalWidth={355}
+        />
+      )}
+
+      {showError && (
+        <ModalPopup
+          visible={showError}
+          mode="noti"
+          contentText={errorMsg}
+          icon={<FontAwesome5 name="exclamation" size={30} color="white" />}
+          iconBgColor="red"
+          confirmBtnText="Đóng"
+          confirmBtnColor="grey"
+          onClose={() => {
+            handleErrorConfirm();
+          }}
+          modalWidth={355}
         />
       )}
     </Modal>

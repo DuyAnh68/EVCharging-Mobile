@@ -19,10 +19,21 @@ export function formatDateTime(isoString: string) {
   return { date: localDate, time, timeWithSeconds, dateWithMinute, formatted };
 }
 
-export const formatVND = (amount: number): string => {
-  if (isNaN(amount)) return "0 đ";
+export const formatVND = (amount: string | number): string => {
+  if (amount === null || amount === undefined) return "0đ";
 
-  const roundedAmount = Math.round(amount);
+  // Nếu là string → loại bỏ các ký tự không phải số (đ, VND, dấu cách, dấu phẩy,...)
+  if (typeof amount === "string") {
+    amount = amount
+      .replace(/đ|VND/gi, "") // bỏ đ hoặc VND (không phân biệt hoa thường)
+      .replace(/[^\d.-]/g, "") // bỏ mọi ký tự không phải số, dấu . hoặc -
+      .trim();
+  }
+
+  const num = Number(amount);
+  if (isNaN(num)) return "0 đ";
+
+  const roundedAmount = Math.round(num);
 
   return `${roundedAmount.toLocaleString("vi-VN")}đ`;
 };
