@@ -1,5 +1,9 @@
 import { invoiceApi } from "@src/apis/invoiceApi";
-import { InvoiceDetail, InvoiceResponse } from "@src/types/invoice";
+import {
+  InvoiceDetail,
+  InvoiceResponse,
+  PayForChargingReq,
+} from "@src/types/invoice";
 import { toInvoiceDetail, toInvoiceList } from "@src/utils/mapData";
 
 export const invoiceRepo = {
@@ -21,5 +25,12 @@ export const invoiceRepo = {
     const mapData: InvoiceDetail = toInvoiceDetail(raw || []);
 
     return { ...res, data: mapData };
+  },
+
+  // Create Payment Url
+  createPaymentUrl: async (payload: PayForChargingReq) => {
+    const res = await invoiceApi.createPaymentUrl(payload);
+
+    return res;
   },
 };

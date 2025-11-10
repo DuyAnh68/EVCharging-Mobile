@@ -6,6 +6,7 @@ import { useInvoice } from "@src/hooks/useInvoice";
 import { useSession } from "@src/hooks/useSession";
 import { COLORS } from "@src/styles/theme";
 import { calcTotalChargingDuration } from "@src/utils/calculateData";
+import { formatRoundedAmount } from "@src/utils/formatData";
 import { router } from "expo-router";
 import { useEffect, useState } from "react";
 import {
@@ -203,7 +204,7 @@ export default function ProfileScreen() {
               adjustsFontSizeToFit={true}
               minimumFontScale={0.5}
             >
-              {stats.totalAmount}
+              {formatRoundedAmount(stats.totalAmount, { asString: true })}
             </Text>
             <Text style={styles.statLabel}>Đã tiêu</Text>
           </View>

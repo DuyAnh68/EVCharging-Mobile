@@ -1,9 +1,16 @@
-import { Ionicons } from "@expo/vector-icons";
+import { FontAwesome5, Ionicons } from "@expo/vector-icons";
 import Button from "@src/components/Button";
+import LoadingOverlay from "@src/components/LoadingOverlay";
+import ModalPopup from "@src/components/ModalPopup";
+import { useInvoice } from "@src/hooks/useInvoice";
 import { COLORS, TEXTS } from "@src/styles/theme";
 import { InvoiceDetail } from "@src/types/invoice";
 import { calcChargingDuration } from "@src/utils/calculateData";
-import { formatDateTime, formatVND } from "@src/utils/formatData";
+import {
+  formatDateTime,
+  formatRoundedAmount,
+  formatVND,
+} from "@src/utils/formatData";
 import { useEffect, useState } from "react";
 import {
   Modal,
@@ -18,10 +25,11 @@ import {
 type Props = {
   visible: boolean;
   invoice: InvoiceDetail;
-  onClose: () => void;
+  onPaymentPress: () => void;
+  onClose: (isPay: boolean) => void;
 };
 
-const Detail = ({ visible, invoice, onClose }: Props) => {
+const Detail = ({ visible, invoice, onPaymentPress, onClose }: Props) => {
   // State
   const [formattedDate, setFormattedDate] = useState<string>("");
   const [startDate, setStartDate] = useState<string>("");
@@ -29,6 +37,10 @@ const Detail = ({ visible, invoice, onClose }: Props) => {
   const [endTime, setEndTimeFormatted] = useState<string>("");
   const [startTimeWithSeconds, setStartTimeWithSeconds] = useState<string>("");
   const [endTimeWithSeconds, setEndTimeWithSeconds] = useState<string>("");
+  const [showCheckout, setShowCheckout] = useState<boolean>(false);
+
+  // Hook
+  const { isLoading } = useInvoice();
 
   // Use Effect
   useEffect(() => {
@@ -61,21 +73,35 @@ const Detail = ({ visible, invoice, onClose }: Props) => {
 
   // Check
   const isPaid = invoice.payment.status === "paid";
+  const isActive = invoice.vehicle.isActive;
 
   // HandleLogic
   const handlePaymentPress = () => {
-    onClose();
+    setShowCheckout(true);
+  };
+
+  const handleCheckoutConfirm = () => {
+    onPaymentPress();
+    onClose(true);
+  };
+
+  const handleClose = () => {
+    onClose(false);
   };
 
   return (
     <Modal visible={visible} transparent animationType="slide">
+      {isLoading && <LoadingOverlay />}
       <View style={styles.container}>
-        <Pressable style={styles.overlay} onPress={onClose} />
+        <Pressable style={styles.overlay} onPress={handleClose} />
         <View style={styles.modalContainer}>
           {/* Header */}
           <View style={styles.headerSection}>
             <Text style={styles.title}>Hóa đơn</Text>
-            <TouchableOpacity onPress={onClose} style={styles.backContainer}>
+            <TouchableOpacity
+              onPress={handleClose}
+              style={styles.backContainer}
+            >
               <Ionicons name="close" size={25} color={COLORS.white} />
             </TouchableOpacity>
           </View>
@@ -117,7 +143,29 @@ const Detail = ({ visible, invoice, onClose }: Props) => {
 
               {/* Vehicle Info */}
               <View style={styles.detailSection}>
-                <Text style={styles.sectionTitle}>Thông tin xe</Text>
+                <View>
+                  <Text style={styles.sectionTitle}>Thông tin xe</Text>
+                  {!isActive && (
+                    <View
+                      style={[
+                        styles.statusBadge,
+                        { backgroundColor: COLORS.danger + "20" },
+                      ]}
+                    >
+                      <View
+                        style={[
+                          styles.statusDot,
+                          { backgroundColor: COLORS.danger },
+                        ]}
+                      />
+                      <Text
+                        style={[styles.statusText, { color: COLORS.danger }]}
+                      >
+                        Xe bị xóa
+                      </Text>
+                    </View>
+                  )}
+                </View>
                 <View style={styles.detailRow}>
                   <Text style={styles.detailLabel}>Hãng xe</Text>
                   <Text style={styles.detailValue}>
@@ -240,7 +288,9 @@ const Detail = ({ visible, invoice, onClose }: Props) => {
                         </Text>
                       </View>
                       <Text style={styles.totalValue}>
-                        {formatVND(invoice.pricing.total_amount)}
+                        {formatRoundedAmount(invoice.pricing.total_amount, {
+                          asString: true,
+                        })}
                       </Text>
                     </View>
                   </>
@@ -265,7 +315,9 @@ const Detail = ({ visible, invoice, onClose }: Props) => {
                       </Text>
                     </View>
                     <Text style={styles.totalValue}>
-                      {formatVND(invoice.pricing.charging_fee)}
+                      {formatRoundedAmount(invoice.pricing.charging_fee, {
+                        asString: true,
+                      })}
                     </Text>
                   </View>
                 )}
@@ -289,6 +341,27 @@ const Detail = ({ visible, invoice, onClose }: Props) => {
           </View>
         </View>
       </View>
+
+      {/* Checkout Modal */}
+      {showCheckout && (
+        <ModalPopup
+          visible={showCheckout}
+          mode="confirm"
+          titleText="Xác nhận thanh toán"
+          contentText="Bạn có chắc chắn sẽ thanh toán hóa đơn này không?"
+          icon={<FontAwesome5 name="exclamation" size={30} color="white" />}
+          iconBgColor="yellow"
+          confirmBtnText="Thanh toán"
+          confirmBtnColor="green"
+          cancelBtnText="Đóng"
+          cancelBtnColor="grey"
+          onClose={() => {
+            setShowCheckout(false);
+          }}
+          onConfirm={handleCheckoutConfirm}
+          modalWidth={355}
+        />
+      )}
     </Modal>
   );
 };
@@ -337,6 +410,10 @@ const styles = StyleSheet.create({
   detailSection: {
     marginBottom: 20,
   },
+  row: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+  },
   sectionTitle: {
     fontSize: 14,
     fontWeight: "700",
@@ -345,6 +422,26 @@ const styles = StyleSheet.create({
     paddingBottom: 8,
     borderBottomWidth: 2,
     borderBottomColor: COLORS.primary,
+  },
+  statusBadge: {
+    flexDirection: "row",
+    alignItems: "center",
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    borderRadius: 12,
+    gap: 6,
+    position: "absolute",
+    right: 0,
+    top: -5,
+  },
+  statusDot: {
+    width: 6,
+    height: 6,
+    borderRadius: 3,
+  },
+  statusText: {
+    fontSize: 10,
+    fontWeight: "600",
   },
   detailRow: {
     paddingVertical: 12,

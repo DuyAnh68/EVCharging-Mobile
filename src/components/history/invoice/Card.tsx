@@ -3,7 +3,7 @@ import InvoiceInfo from "@src/components/history/invoice/InvoiceInfo";
 import { COLORS, TEXTS } from "@src/styles/theme";
 import type { Invoice } from "@src/types/invoice";
 import { calcSecondsToDuration } from "@src/utils/calculateData";
-import { formatDateTime } from "@src/utils/formatData";
+import { formatDateTime, formatRoundedAmount } from "@src/utils/formatData";
 import {
   getPaymentStatusColor,
   getPaymentStatusLabel,
@@ -107,7 +107,7 @@ export const Card: React.FC<CardProps> = ({
         />
         <InvoiceInfo
           label="Tổng tiền"
-          value={invoice.totalAmount}
+          value={formatRoundedAmount(invoice.totalAmount, { asString: true })}
           icon="card"
           color={COLORS.warning}
         />

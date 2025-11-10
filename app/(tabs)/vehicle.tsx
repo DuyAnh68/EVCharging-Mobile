@@ -12,7 +12,7 @@ import { COLORS, TEXTS } from "@src/styles/theme";
 import { SubscriptionPlan } from "@src/types/subscription";
 import { VehicleDetail } from "@src/types/vehicle";
 import { useFocusEffect, useLocalSearchParams } from "expo-router";
-import React, { useCallback, useEffect, useState } from "react";
+import React, { useCallback, useEffect, useRef, useState } from "react";
 import {
   FlatList,
   RefreshControl,
@@ -53,6 +53,9 @@ export default function VehicleScreen() {
     type: string;
   }>();
 
+  // Ref
+  const flatListRef = useRef<FlatList>(null);
+
   // Api
   const fetchVehicles = useCallback(async () => {
     const res = await getVehicles();
@@ -89,14 +92,17 @@ export default function VehicleScreen() {
   }, [fetchVehicles]);
 
   // Handle logic
-  const handleShowForm = () => {
+  const handleShowForm = useCallback(() => {
     setShowForm(true);
-  };
+  }, []);
 
-  const handleShowEdit = (vehicle: VehicleDetail) => {
-    setSelectedVehicle(vehicle);
-    handleShowForm();
-  };
+  const handleShowEdit = useCallback(
+    (vehicle: VehicleDetail) => {
+      setSelectedVehicle(vehicle);
+      handleShowForm();
+    },
+    [handleShowForm]
+  );
 
   const handleSuccess = (message: string) => {
     if (setSelectedVehicle) {
@@ -118,10 +124,10 @@ export default function VehicleScreen() {
     setShowForm(false);
   };
 
-  const handleShowDetail = (vehicle: VehicleDetail) => {
+  const handleShowDetail = useCallback((vehicle: VehicleDetail) => {
     setSelectedVehicle(vehicle);
     setShowDetail(true);
-  };
+  }, []);
 
   const handleCloseDetail = () => {
     if (setSelectedVehicle) {
@@ -131,10 +137,10 @@ export default function VehicleScreen() {
     setShowDetail(false);
   };
 
-  const handleShowDelete = (vehicle: VehicleDetail) => {
+  const handleShowDelete = useCallback((vehicle: VehicleDetail) => {
     setSelectedVehicle(vehicle);
     setShowDelete(true);
-  };
+  }, []);
 
   const handleCloseDelete = () => {
     if (setSelectedVehicle) {
@@ -172,12 +178,14 @@ export default function VehicleScreen() {
 
   // UseEffect
   useEffect(() => {
+    if (paymentResult) return;
     fetchData();
   }, []);
 
   // UseFocusEffect
   useFocusEffect(
     useCallback(() => {
+      flatListRef.current?.scrollToOffset({ offset: 0, animated: false });
       // Kiểm tra paymentResult chỉ khi screen này được focus
       if (paymentResult === "success") {
         if (type === "createSub") {
@@ -210,13 +218,16 @@ export default function VehicleScreen() {
   );
 
   // Render card
-  const renderVehicleItem = ({ item }: { item: VehicleDetail }) => (
-    <Card
-      vehicle={item}
-      onPress={() => handleShowDetail(item)}
-      onEdit={() => handleShowEdit(item)}
-      onDelete={() => handleShowDelete(item)}
-    />
+  const renderVehicleItem = useCallback(
+    ({ item }: { item: VehicleDetail }) => (
+      <Card
+        vehicle={item}
+        onPress={() => handleShowDetail(item)}
+        onEdit={() => handleShowEdit(item)}
+        onDelete={() => handleShowDelete(item)}
+      />
+    ),
+    [handleShowDetail, handleShowEdit, handleShowDelete]
   );
 
   return (
@@ -241,6 +252,7 @@ export default function VehicleScreen() {
       {/* Vehicle List */}
       {vehicles.length > 0 ? (
         <FlatList
+          ref={flatListRef}
           data={vehicles}
           renderItem={renderVehicleItem}
           keyExtractor={(item) => item.id}
@@ -255,6 +267,10 @@ export default function VehicleScreen() {
           scrollEnabled={true}
           showsVerticalScrollIndicator={false}
           scrollEventThrottle={16}
+          initialNumToRender={10}
+          maxToRenderPerBatch={10}
+          updateCellsBatchingPeriod={50}
+          removeClippedSubviews={true}
         />
       ) : (
         !isLoading && (

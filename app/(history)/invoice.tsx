@@ -5,20 +5,26 @@ import {
 } from "@expo/vector-icons";
 import Button from "@src/components/Button";
 import { Card } from "@src/components/history/invoice/Card";
+import Checkout from "@src/components/history/invoice/Checkout";
 import Detail from "@src/components/history/invoice/Detail";
 import EmptyState from "@src/components/history/invoice/EmptyState";
 import FilterStatus from "@src/components/history/invoice/FilterStatus";
+import LoadingOverlay from "@src/components/LoadingOverlay";
 import ModalPopup from "@src/components/ModalPopup";
 import { useAuthContext } from "@src/context/AuthContext";
 import { useLoading } from "@src/context/LoadingContext";
+import { usePayment } from "@src/context/PaymentContext";
 import { useInvoice } from "@src/hooks/useInvoice";
 import { COLORS, TEXTS } from "@src/styles/theme";
 import type {
   Invoice,
   InvoiceDetail,
   InvoiceResponse,
+  PayForChargingReq,
 } from "@src/types/invoice";
-import { router } from "expo-router";
+import { calcTotalAmount } from "@src/utils/calculateData";
+import { formatRoundedAmount } from "@src/utils/formatData";
+import { router, useFocusEffect } from "expo-router";
 import type React from "react";
 import { useCallback, useEffect, useState } from "react";
 import {
@@ -45,12 +51,28 @@ const InvoiceScreen = () => {
     useState<InvoiceDetail | null>(null);
   const [showDetail, setShowDetail] = useState<boolean>(false);
   const [isPayment, setIsPayment] = useState<boolean>(false);
-  const [selectedInvoiceId, setSelectedInvoiceId] = useState<string[]>([]);
+  const [selectedInvoiceIds, setSelectedInvoiceIds] = useState<string[]>([]);
+  const [selectedInvoiceList, setSelectedInvoiceList] = useState<
+    Invoice[] | null
+  >(null);
+  const [showCheckout, setShowCheckout] = useState<boolean>(false);
+  const totalOfList =
+    selectedInvoiceList && selectedInvoiceList?.length > 0
+      ? calcTotalAmount(selectedInvoiceList || [])
+      : 0;
+  const [showMsg, setShowMsg] = useState<boolean>(false);
+  const [msg, setMsg] = useState<string>("");
 
   // Hook
   const { user } = useAuthContext();
   const { isLoading } = useLoading();
-  const { getInvoices, getInvoiceDetail } = useInvoice();
+  const {
+    getInvoices,
+    getInvoiceDetail,
+    payForCharging,
+    isLoading: invoiceLoading,
+  } = useInvoice();
+  const { paymentResult, setPaymentResult, isBack, setIsBack } = usePayment();
 
   // Api
   const fetchInvoices = useCallback(async () => {
@@ -101,7 +123,7 @@ const InvoiceScreen = () => {
     setIsPayment((prev) => {
       const newValue = !prev;
       setFilterStatus(newValue ? "unpaid" : undefined);
-      if (!newValue) setSelectedInvoiceId([]);
+      if (!newValue) setSelectedInvoiceIds([]);
       return newValue;
     });
   };
@@ -112,14 +134,19 @@ const InvoiceScreen = () => {
 
   const handleInvoicePress = async (invoiceId: string) => {
     if (isPayment) {
-      setSelectedInvoiceId((prev) => {
-        if (prev.includes(invoiceId)) {
-          // nếu đã chọn rồi thì bỏ chọn
-          return prev.filter((itemId) => itemId !== invoiceId);
+      setSelectedInvoiceIds((prevIds) => {
+        let newIds;
+        if (prevIds.includes(invoiceId)) {
+          newIds = prevIds.filter((id) => id !== invoiceId);
         } else {
-          // nếu chưa có thì thêm vào
-          return [...prev, invoiceId];
+          newIds = [...prevIds, invoiceId];
         }
+
+        // Cập nhật list hóa đơn đã chọn
+        const newList = invoices.filter((inv) => newIds.includes(inv.id));
+        setSelectedInvoiceList(newList);
+
+        return newIds;
       });
     } else {
       const invoiceData = await fetchInvoiceDetail(invoiceId);
@@ -134,29 +161,101 @@ const InvoiceScreen = () => {
     const unpaidIds = invoices
       .filter((item) => item.paymentStatus === "unpaid")
       .map((item) => item.id);
-    setSelectedInvoiceId(unpaidIds);
+    setSelectedInvoiceIds(unpaidIds);
   };
 
   const handleDeselectAll = () => {
-    setSelectedInvoiceId([]);
+    setSelectedInvoiceIds([]);
   };
 
-  const handleCloseDetail = () => {
+  const handleCloseDetail = (isPay: boolean) => {
     setShowDetail(false);
+    if (isPay) return;
     setSelectedInvoiceData(null);
   };
 
-  const handlePaymentPress = () => {
-    // Logic for payment processing can be added here
+  const handlePayment = async () => {
+    if (!user) return;
+
+    const invoiceIds = selectedInvoiceData
+      ? [selectedInvoiceData.invoice.id]
+      : selectedInvoiceIds;
+
+    const totalAmount = selectedInvoiceData
+      ? formatRoundedAmount(selectedInvoiceData.pricing.charging_fee)
+      : calcTotalAmount(selectedInvoiceList || []);
+
+    const payload: PayForChargingReq = {
+      userId: user?.userId,
+      invoiceIds,
+      amount: totalAmount + 10000,
+    };
+
+    console.log("Payload gửi lên BE:", payload);
+
+    const res = await payForCharging(payload);
+
+    if (!res.success) {
+      setMsg(res.message);
+      setShowMsg(true);
+    }
+
+    resetSelectedInvoice();
+  };
+
+  const handleShowCheckout = () => {
+    setShowCheckout(true);
+  };
+
+  const handleCheckoutConfirm = () => {
+    handlePayment();
+    setShowCheckout(false);
+  };
+
+  const handleCloseCheckout = () => {
+    setShowCheckout(false);
+  };
+
+  const resetSelectedInvoice = () => {
+    if (selectedInvoiceData) {
+      setSelectedInvoiceData(null);
+    } else {
+      setSelectedInvoiceIds([]);
+      setSelectedInvoiceList(null);
+    }
   };
 
   // Check
-  const hasSelectedInvoice = selectedInvoiceId.length > 0;
+  const hasSelectedInvoice = selectedInvoiceIds.length > 0;
+  const isNoUnpaid = (summary?.unpaid?.count ?? 0) === 0;
 
   // UseEffect
   useEffect(() => {
     fetchInvoices();
   }, [filterStatus]);
+
+  // UseFocusEffect
+  useFocusEffect(
+    useCallback(() => {
+      // Kiểm tra paymentResult chỉ khi screen này được focus
+      if (paymentResult === "success") {
+        setFilterStatus(undefined);
+        setIsPayment(false);
+        fetchInvoices();
+        setPaymentResult(null);
+      }
+
+      if (paymentResult === "failed" || isBack) {
+        setMsg("Thanh toán thất bại. Vui lòng thử lại sau.");
+        setShowMsg(true);
+        setFilterStatus(undefined);
+        setIsPayment(false);
+        setPaymentResult(null);
+        setIsBack(false);
+        fetchInvoices();
+      }
+    }, [paymentResult, isBack])
+  );
 
   // Render
   const renderItem = ({ item }: { item: Invoice }) => (
@@ -164,19 +263,24 @@ const InvoiceScreen = () => {
       invoice={item}
       onPress={handleInvoicePress}
       isPayment={isPayment}
-      isSelected={selectedInvoiceId.includes(item.id)}
+      isSelected={selectedInvoiceIds.includes(item.id)}
     />
   );
 
   return (
     <View style={styles.container}>
+      {invoiceLoading && <LoadingOverlay />}
       {/* Header */}
       <View style={styles.headerSection}>
         <TouchableOpacity style={styles.backContainer} onPress={handleBack}>
           <Ionicons name="chevron-back" size={25} color={COLORS.white} />
         </TouchableOpacity>
         <Text style={styles.title}>Lịch sử giao dịch</Text>
-        <TouchableOpacity onPress={handleAddPaymentPress}>
+        <TouchableOpacity
+          onPress={handleAddPaymentPress}
+          disabled={isNoUnpaid}
+          style={isNoUnpaid && { opacity: 0.5 }}
+        >
           <MaterialCommunityIcons
             name="credit-card-plus"
             size={25}
@@ -227,10 +331,10 @@ const InvoiceScreen = () => {
             </TouchableOpacity>
           </View>
           <Button
-            text={`Thanh toán (${selectedInvoiceId.length})`}
+            text={`Thanh toán (${selectedInvoiceIds.length})`}
             colorType={hasSelectedInvoice ? "primary" : "grey"}
             onPress={() => {
-              handlePaymentPress();
+              handleShowCheckout();
             }}
             disabled={!hasSelectedInvoice}
             width={150}
@@ -270,9 +374,21 @@ const InvoiceScreen = () => {
           <Detail
             visible={showDetail}
             invoice={selectedInvoiceData}
+            onPaymentPress={handlePayment}
             onClose={handleCloseDetail}
           />
         </>
+      )}
+
+      {/* Checkout Modal */}
+      {showCheckout && selectedInvoiceList && (
+        <Checkout
+          visible={showCheckout}
+          invoices={selectedInvoiceList}
+          total={totalOfList}
+          onPaymentPress={handleCheckoutConfirm}
+          onClose={handleCloseCheckout}
+        />
       )}
 
       {/* Toast Modal */}
@@ -292,6 +408,23 @@ const InvoiceScreen = () => {
             setErrorMsg("");
           }}
           onConfirm={handleConfirmError}
+          modalWidth={355}
+        />
+      )}
+
+      {showMsg && (
+        <ModalPopup
+          visible={showMsg}
+          mode="noti"
+          contentText={msg}
+          icon={<FontAwesome5 name="exclamation" size={30} color="white" />}
+          iconBgColor="red"
+          confirmBtnText="Đóng"
+          confirmBtnColor="grey"
+          onClose={() => {
+            setShowMsg(false);
+            setMsg("");
+          }}
           modalWidth={355}
         />
       )}

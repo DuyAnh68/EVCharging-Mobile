@@ -72,17 +72,18 @@ export const validateLogin = (data: LoginReq): LoginErrors => {
 const validateVietnamPlate = (plateRaw: string): boolean => {
   if (!plateRaw || typeof plateRaw !== "string") return false;
 
-  const raw = plateRaw.trim().toUpperCase();
+  const raw = plateRaw.trim();
   const normalized = raw
-    .replace(/\s+/g, "")
-    .replace(/[-\s]/g, "-")
+    .replace(/\s{2,}/g, " ")
+    .replace(/[-\s]/g, (match) => (match === " " ? " " : "-"))
     .replace(/\./g, ".");
 
   const patterns: RegExp[] = [
-    /^\d{2}[A-Z]{1}-\d{3}\.\d{2}$/, // 30A-123.45
-    /^\d{2}[A-Z]{1}-\d{4}$/, // 30A-1234
-    /^\d{2}[A-Z]{2}-\d{3}\.\d{2}$/, // 12AB-123.45
-    /^\d{2}[A-Z]{2}-\d{4}$/, // 12AB-1234
+    // Ô tô: 30A-1234, 30A-12345, 30A-123.45
+    /^\d{2}[A-Z]-\d{4,5}(\.\d{2})?$/,
+
+    // Xe máy: 12-AB 1234, 12-AB 12345, 12-AB 123.45
+    /^\d{2}-[A-Z]{2}\s\d{4,5}(\.\d{2})?$/,
   ];
 
   return patterns.some((re) => re.test(normalized));
@@ -102,8 +103,14 @@ export const validateVehicle = (
 
     case "plateNumber":
       if (!strValue.trim()) return "Vui lòng nhập biển số xe.";
-      if (!validateVietnamPlate(strValue))
-        return "Biển số xe không hợp lệ (VD: 30A-123.45 hoặc 29A-1234).";
+      const raw = strValue.trim();
+
+      // Kiểm tra chữ thường
+      if (/[a-z]/.test(raw))
+        return "Các chữ cái trong biển số xe phải viết hoa.";
+
+      if (!validateVietnamPlate(raw))
+        return "Biển số xe không hợp lệ (VD: 30A-123.45, 29A-1234, 12-AB 123.45, 12-AB 1234).";
       break;
 
     case "batteryCapacity":
@@ -121,8 +128,8 @@ export const validateVehicle = (
       if (capacity > 100) return "Dung lượng pin phải nhỏ hơn 100.";
 
       // Kiểm tra đúng định dạng số (vd: 1, 1.5, 2.75)
-      if (!/^\d+(\.\d+)?$/.test(normalized))
-        return "Dung lượng pin không hợp lệ. Ví dụ: 50.5 hoặc 60";
+      if (!/^\d+(\.\d{1,2})?$/.test(normalized))
+        return "Dung lượng pin không hợp lệ (VD: 50.5, 60, 60.25).";
 
       break;
   }

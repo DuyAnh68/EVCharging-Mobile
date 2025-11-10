@@ -7,7 +7,7 @@ import {
 import { COLORS, TEXTS } from "@src/styles/theme";
 import { VehicleDetail } from "@src/types/vehicle";
 import { formatDateTime } from "@src/utils/formatData";
-import { useEffect, useState } from "react";
+import React, { useEffect, useState } from "react";
 import {
   Platform,
   StyleSheet,
@@ -23,12 +23,7 @@ interface CardProps {
   onDelete: () => void;
 }
 
-export default function VehicleCard({
-  vehicle,
-  onPress,
-  onEdit,
-  onDelete,
-}: CardProps) {
+function Card({ vehicle, onPress, onEdit, onDelete }: CardProps) {
   // State
   const [startDate, setStartDate] = useState<string>("");
   const [endDate, setEndDate] = useState<string>("");
@@ -286,3 +281,5 @@ const styles = StyleSheet.create({
     color: TEXTS.secondary,
   },
 });
+
+export default React.memo(Card);
