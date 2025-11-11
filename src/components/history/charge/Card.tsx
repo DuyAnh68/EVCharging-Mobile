@@ -3,7 +3,11 @@ import SessionInfo from "@src/components/history/charge/SessionInfo";
 import { COLORS, TEXTS } from "@src/styles/theme";
 import { SessionDetail } from "@src/types/session";
 import { calcChargingDuration } from "@src/utils/calculateData";
-import { formatDateTime, formatVND } from "@src/utils/formatData";
+import {
+  formatDateTime,
+  formatRoundedAmount,
+  formatVND,
+} from "@src/utils/formatData";
 import {
   getChargeStatusColor,
   getChargeStatusLabel,
@@ -52,10 +56,13 @@ export default function Card({ session, onPress }: CardProps) {
     endTimeWithSeconds
   );
 
+  // Check
+  const isActive = session.vehicle.isActive;
+
   return (
     <View style={styles.card}>
       {/* Header */}
-      <View style={styles.header}>
+      <View style={[styles.header, !isActive && { alignItems: "center" }]}>
         <View style={styles.headerLeft}>
           <View style={styles.iconContainer}>
             <Ionicons name="car-sport" size={24} color={COLORS.white} />
@@ -69,13 +76,38 @@ export default function Card({ session, onPress }: CardProps) {
         </View>
 
         {/* Status */}
-        <View
-          style={[styles.statusBadge, { backgroundColor: statusColor + "20" }]}
-        >
-          <View style={[styles.statusDot, { backgroundColor: statusColor }]} />
-          <Text style={[styles.statusText, { color: statusColor }]}>
-            {statusLabel}
-          </Text>
+        <View style={styles.statusContainer}>
+          <View
+            style={[
+              styles.statusBadge,
+              { backgroundColor: statusColor + "20" },
+            ]}
+          >
+            <View
+              style={[styles.statusDot, { backgroundColor: statusColor }]}
+            />
+            <Text style={[styles.statusText, { color: statusColor }]}>
+              {statusLabel}
+            </Text>
+          </View>
+
+          {!isActive && (
+            <View
+              style={[
+                styles.statusBadge,
+                {
+                  backgroundColor: COLORS.danger + "20",
+                },
+              ]}
+            >
+              <View
+                style={[styles.statusDot, { backgroundColor: COLORS.danger }]}
+              />
+              <Text style={[styles.statusText, { color: COLORS.danger }]}>
+                Xe bị xóa
+              </Text>
+            </View>
+          )}
         </View>
       </View>
 
@@ -116,7 +148,7 @@ export default function Card({ session, onPress }: CardProps) {
         />
         <SessionInfo
           label="Tổng tiền"
-          value={`${formatVND(session.totalAmount)}`}
+          value={formatRoundedAmount(session.totalAmount, { asString: true })}
           icon="card"
           color={COLORS.warning}
         />
@@ -183,13 +215,13 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   plateNumber: {
-    fontSize: 18,
+    fontSize: 19,
     fontWeight: "700",
     color: TEXTS.primary,
     marginBottom: 2,
   },
   sessionModel: {
-    fontSize: 13,
+    fontSize: 14,
     color: TEXTS.secondary,
     fontWeight: "500",
   },
@@ -201,6 +233,10 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     alignItems: "center",
     marginRight: 12,
+  },
+  statusContainer: {
+    gap: 3,
+    alignItems: "flex-end",
   },
   statusBadge: {
     flexDirection: "row",

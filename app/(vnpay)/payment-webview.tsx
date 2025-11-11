@@ -1,9 +1,10 @@
-import { Ionicons } from "@expo/vector-icons";
+import { FontAwesome5, Ionicons } from "@expo/vector-icons";
+import ModalPopup from "@src/components/ModalPopup";
 import { usePayment } from "@src/context/PaymentContext";
 import { COLORS, TEXTS } from "@src/styles/theme";
 import * as Linking from "expo-linking";
 import { router, useLocalSearchParams } from "expo-router";
-import React, { useEffect, useRef } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import { WebView } from "react-native-webview";
 
@@ -15,11 +16,27 @@ export default function PaymentWebView() {
   // Use Ref
   const webviewRef = useRef<any>(null);
 
+  // State
+  const [showBack, setShowBack] = useState<boolean>(false);
+
   // Hook
   const { paymentUrl, setPaymentResult, resetPayment, setIsBack } =
     usePayment();
 
   // Handle logic
+  const handleShowBack = () => {
+    setShowBack(true);
+  };
+
+  const handleBack = () => {
+    setShowBack(false);
+    handleClose();
+  };
+
+  const handleCloseBack = () => {
+    setShowBack(false);
+  };
+
   const handleClose = () => {
     setIsBack(true);
     router.back();
@@ -81,11 +98,10 @@ export default function PaymentWebView() {
       <View style={styles.headerSection}>
         <Text style={styles.title}>Thanh toán VNPay</Text>
 
-        <TouchableOpacity style={styles.backContainer} onPress={handleClose}>
+        <TouchableOpacity style={styles.backContainer} onPress={handleShowBack}>
           <Ionicons name="chevron-back" size={25} color={COLORS.white} />
         </TouchableOpacity>
       </View>
-
       {paymentUrl ? (
         <WebView
           ref={webviewRef}
@@ -129,6 +145,25 @@ export default function PaymentWebView() {
         >
           <Text>Không tìm thấy URL thanh toán</Text>
         </View>
+      )}
+
+      {/* Modal Confirm */}
+      {showBack && (
+        <ModalPopup
+          visible={showBack}
+          mode="confirm"
+          titleText="Xác nhận hủy thanh toán"
+          contentText={`Bạn có chắc chắn muốn hủy thanh toán không?`}
+          icon={<FontAwesome5 name="exclamation" size={30} color="white" />}
+          iconBgColor="yellow"
+          confirmBtnText="Hủy"
+          confirmBtnColor="red"
+          cancelBtnText="Đóng"
+          cancelBtnColor="grey"
+          onClose={handleCloseBack}
+          onConfirm={handleBack}
+          modalWidth={355}
+        />
       )}
     </View>
   );

@@ -384,7 +384,7 @@ const Form = ({
                         shadowColor: "red",
                       },
                     ]}
-                    placeholder="VD: 29A-12345"
+                    placeholder="VD: 29A-123.45, 30AB-1234"
                     placeholderTextColor={TEXTS.placeholder}
                     value={form.plateNumber}
                     onChangeText={(text) => handleChange("plateNumber", text)}

@@ -1,5 +1,6 @@
 import { COLORS, TEXTS } from "@src/styles/theme";
 import type { Summary, SummaryItem } from "@src/types/invoice";
+import { formatRoundedAmount } from "@src/utils/formatData";
 import React from "react";
 import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
 
@@ -65,7 +66,7 @@ const FilterStatus: React.FC<FilterStatusProps> = ({
         <Text
           style={[styles.filterAmount, isSelected && { color: COLORS.black }]}
         >
-          {summary.totalAmount}
+          {formatRoundedAmount(summary.totalAmount, { asString: true })}
         </Text>
       </TouchableOpacity>
     );
