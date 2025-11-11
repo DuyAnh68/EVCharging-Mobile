@@ -14,8 +14,8 @@ export const bookingRepo = {
     return res;
   },
 
-  getAllMyBooking: async () => {
-    const res = await bookingApi.getAllMyBooking();
+  getAllMyBooking: async (userId: string) => {
+    const res = await bookingApi.getAllMyBooking(userId);
     return res;
   },
 
@@ -34,6 +34,15 @@ export const bookingRepo = {
   // Delete booking
   delete: async (id: string) => {
     const res = await bookingApi.delete(id);
+    return res;
+  },
+
+  payForBaseFee: async (amount: number, userId: string, bookingId: string) => {
+    const res = await bookingApi.payForBaseFee({
+      amount,
+      userId,
+      booking_id: bookingId,
+    });
     return res;
   },
 };
