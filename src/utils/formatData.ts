@@ -1,8 +1,33 @@
 /**
  * Định dạng dateTime
  */
-export function formatDateTime(isoString: string) {
-  const date = new Date(isoString);
+export function formatDateTime(dateString: string) {
+  let date: Date;
+
+  // Nếu là vnp_PayDate (dạng 20251111112835)
+  if (/^\d{14}$/.test(dateString)) {
+    const year = dateString.slice(0, 4);
+    const month = dateString.slice(4, 6);
+    const day = dateString.slice(6, 8);
+    const hour = dateString.slice(8, 10);
+    const minute = dateString.slice(10, 12);
+    const second = dateString.slice(12, 14);
+    date = new Date(`${year}-${month}-${day}T${hour}:${minute}:${second}`);
+  }
+  // Ngược lại, xử lý như ISO string bình thường
+  else {
+    date = new Date(dateString);
+  }
+  if (isNaN(date.getTime())) {
+    return {
+      date: "-",
+      time: "-",
+      timeWithSeconds: "-",
+      dateWithMinute: "-",
+      formatted: "-",
+    };
+  }
+
   const localDate = date.toLocaleDateString("vi-VN");
   const time = date.toLocaleTimeString("vi-VN", {
     hour: "2-digit",

@@ -2,14 +2,15 @@ import { FontAwesome5, Ionicons } from "@expo/vector-icons";
 import ModalPopup from "@src/components/ModalPopup";
 import Info from "@src/components/profile/Info";
 import { useAuthContext } from "@src/context/AuthContext";
-import { useInvoice } from "@src/hooks/useInvoice";
 import { useSession } from "@src/hooks/useSession";
+import { useTransaction } from "@src/hooks/useTransaction";
 import { COLORS } from "@src/styles/theme";
 import { calcTotalChargingDuration } from "@src/utils/calculateData";
 import { formatRoundedAmount } from "@src/utils/formatData";
 import { router } from "expo-router";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import {
+  RefreshControl,
   ScrollView,
   StyleSheet,
   Text,
@@ -23,7 +24,7 @@ export default function ProfileScreen() {
 
   // Hook
   const { getSessionsCompleted } = useSession();
-  const { getInvoices } = useInvoice();
+  const { getTotalAmount } = useTransaction();
 
   // State
   const [showInfo, setShowInfo] = useState<boolean>(false);
@@ -36,6 +37,7 @@ export default function ProfileScreen() {
     totalHours: "",
     totalAmount: "",
   });
+  const [refreshing, setRefreshing] = useState(false);
 
   // Api
   const fetchStats = async () => {
@@ -55,20 +57,30 @@ export default function ProfileScreen() {
       return;
     }
 
-    const resInvoices = await getInvoices(user.userId);
-    if (resInvoices.success && resInvoices.invoices) {
-      const totalAmount = resInvoices.invoices.summary.paid.totalAmount;
+    const resTransaction = await getTotalAmount();
+    if (resTransaction.success && resTransaction.totalAmount !== undefined) {
+      const totalAmount = formatRoundedAmount(resTransaction.totalAmount, {
+        asString: true,
+      });
 
       setStats((prev) => ({
         ...prev,
         totalAmount,
       }));
     } else {
-      setErrorMsg(resInvoices.message || "Không thể lấy danh sách giao dịch!");
+      setErrorMsg(
+        resTransaction.message || "Không thể lấy tổng tiền đã sử dụng!"
+      );
       setShowError(true);
       return;
     }
   };
+
+  const onRefresh = useCallback(async () => {
+    setRefreshing(true);
+    await fetchStats();
+    setRefreshing(false);
+  }, []);
 
   // Hanlde logic
   const handleShowInfo = () => {
@@ -85,6 +97,10 @@ export default function ProfileScreen() {
     setShowError(true);
   };
 
+  const handleErrorConfirm = async () => {
+    await fetchStats();
+  };
+
   const handleCloseInfo = () => {
     setShowInfo(false);
   };
@@ -97,9 +113,16 @@ export default function ProfileScreen() {
     router.replace("/(history)/invoice");
   };
 
+  const showHistoryTransaction = () => {
+    router.replace("/(history)/transaction");
+  };
+
   const handleLogout = async () => {
     await logout();
   };
+
+  // Check
+  const isCompany = user?.isCompany;
 
   // Use Effect
   useEffect(() => {
@@ -117,25 +140,25 @@ export default function ProfileScreen() {
     },
     {
       id: 2,
+      title: "Thanh toán phí sạc",
+      icon: "card-outline",
+      color: COLORS.warningDark,
+      onPress: showHistoryInvoice,
+    },
+    {
+      id: 3,
       title: "Lịch sử sạc",
       icon: "flash-outline",
       color: COLORS.success,
       onPress: showHistoryCharge,
     },
     {
-      id: 3,
+      id: 4,
       title: "Lịch sử giao dịch",
-      icon: "card-outline",
-      color: COLORS.warningDark,
-      onPress: showHistoryInvoice,
+      icon: "receipt-outline",
+      color: COLORS.danger,
+      onPress: showHistoryTransaction,
     },
-    // {
-    //   id: 4,
-    //   title: "Lịch sử gói đăng ký",
-    //   icon: "receipt-outline",
-    //   color: COLORS.danger,
-    //   onPress: handleShowInfo,
-    // },
     // {
     //   id: 5,
     //   title: "Cài đặt",
@@ -157,7 +180,11 @@ export default function ProfileScreen() {
       <View style={styles.header}>
         <View style={styles.profileInfo}>
           <View style={styles.avatarContainer}>
-            <Ionicons name="person" size={50} color={COLORS.black} />
+            <Ionicons
+              name={isCompany ? "business" : "person"}
+              size={50}
+              color={COLORS.black}
+            />
           </View>
           <View style={styles.userInfo}>
             <Text style={styles.userName}>{user?.username}</Text>
@@ -167,9 +194,13 @@ export default function ProfileScreen() {
         </View>
       </View>
 
+      {/* Content */}
       <ScrollView
         style={styles.contentContainer}
         showsVerticalScrollIndicator={false}
+        refreshControl={
+          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+        }
       >
         {/* Stats */}
         <View style={styles.statsContainer}>
@@ -282,16 +313,19 @@ export default function ProfileScreen() {
       {showError && (
         <ModalPopup
           visible={showError}
-          mode="noti"
+          mode="confirm"
           contentText={errorMsg}
           icon={<FontAwesome5 name="exclamation" size={30} color="white" />}
           iconBgColor="red"
-          confirmBtnText="Đóng"
-          confirmBtnColor="grey"
+          confirmBtnText="Thử lại"
+          confirmBtnColor="blue"
+          cancelBtnText="Đóng"
+          cancelBtnColor="grey"
           onClose={() => {
             setShowError(false);
             setErrorMsg("");
           }}
+          onConfirm={handleErrorConfirm}
           modalWidth={355}
         />
       )}

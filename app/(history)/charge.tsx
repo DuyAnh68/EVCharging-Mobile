@@ -165,7 +165,7 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     alignItems: "center",
     bottom: 40,
-    left: 10,
+    left: 15,
   },
   listContent: {
     paddingHorizontal: 16,

@@ -6,6 +6,7 @@ import {
 } from "@src/types/invoice";
 import { SessionDetail } from "@src/types/session";
 import { SubscriptionPlan } from "@src/types/subscription";
+import { Transaction } from "@src/types/transaction";
 import { VehicleDetail, VehicleReq } from "@src/types/vehicle";
 
 // VEHICLE
@@ -160,6 +161,7 @@ export const toInvoice = (data: any): Invoice => {
     vehicle: {
       model,
       plateNumber,
+      isActive: data.vehicle_is_active,
     },
     duration: data.duration,
     energyDelivered: data.energy_delivered,
@@ -242,3 +244,23 @@ export const toInvoiceDetail = (data: any): InvoiceDetail => ({
     status: data.payment.status,
   },
 });
+
+// TRANSACTION
+export const toTransaction = (data: any): Transaction => ({
+  id: data._id,
+  type: data.type,
+  companyId: data.companyId || null,
+  vnpTxnRef: data.vnp_TxtRef,
+  vnpAmount: data.vnp_Amount,
+  vnpTransactionNo: data.vnp_TransactionNo,
+  vnpBankCode: data.vnp_BankCode,
+  vnpCardType: data.vnp_CardType,
+  vnpPayDate: data.vnp_PayDate,
+  vnpResponseCode: data.vnp_ResponseCode,
+  vnpTransactionStatus: data.vnp_TransactionStatus,
+});
+
+export const toTransactionList = (data: any): Transaction[] => {
+  const list = Array.isArray(data) ? data : data?.payments;
+  return (list || []).map(toTransaction);
+};

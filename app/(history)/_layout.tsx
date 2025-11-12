@@ -13,6 +13,7 @@ export default function HistoryLayout() {
       >
         <Stack.Screen name="charge" options={{ headerShown: false }} />
         <Stack.Screen name="invoice" options={{ headerShown: false }} />
+        <Stack.Screen name="transaction" options={{ headerShown: false }} />
       </Stack>
     </Background>
   );

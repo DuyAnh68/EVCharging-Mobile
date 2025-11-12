@@ -97,6 +97,8 @@ const Info = ({ visible, user, onClose, onSuccess, onError }: Props) => {
 
   const canUpdate = isFormValid() && isChanged();
 
+  const isCompany = user.isCompany;
+
   // UseEffect
   useEffect(() => {
     setForm({
@@ -207,6 +209,9 @@ const Info = ({ visible, user, onClose, onSuccess, onError }: Props) => {
                           borderColor: "red",
                           shadowColor: "red",
                         },
+                        isCompany && {
+                          color: TEXTS.secondary,
+                        },
                       ]}
                       placeholder="Nhập địa chỉ email"
                       placeholderTextColor={TEXTS.placeholder}
@@ -219,6 +224,8 @@ const Info = ({ visible, user, onClose, onSuccess, onError }: Props) => {
                       onBlur={() => {
                         handleBlur("email");
                       }}
+                      editable={!isCompany}
+                      selectTextOnFocus={!isCompany}
                     />
                     <Text style={styles.errorText}>{errors.email || " "}</Text>
                   </View>

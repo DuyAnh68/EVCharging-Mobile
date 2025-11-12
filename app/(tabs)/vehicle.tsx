@@ -320,7 +320,7 @@ export default function VehicleScreen() {
           visible={showDelete}
           mode="confirm"
           titleText="Xác nhận xóa"
-          contentText={`Khi xóa sẽ mất luôn gói đăng ký (nếu có). Bạn có chắc chắn muốn xóa xe có biển số "${selectedVehicle.plateNumber}" không?`}
+          contentText={`Bạn có chắc chắn muốn xóa xe có biển số "${selectedVehicle.plateNumber}" không?`}
           icon={<Ionicons name="trash" size={30} color={COLORS.white} />}
           iconBgColor="red"
           confirmBtnText="Xóa"

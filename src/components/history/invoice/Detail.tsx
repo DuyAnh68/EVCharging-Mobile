@@ -11,6 +11,10 @@ import {
   formatRoundedAmount,
   formatVND,
 } from "@src/utils/formatData";
+import {
+  getPaymentStatusColor,
+  getPaymentStatusLabel,
+} from "@src/utils/getHelper";
 import { useEffect, useState } from "react";
 import {
   Modal,
@@ -75,6 +79,10 @@ const Detail = ({ visible, invoice, onPaymentPress, onClose }: Props) => {
   const isPaid = invoice.payment.status === "paid";
   const isActive = invoice.vehicle.isActive;
 
+  // Get
+  const statusColor = getPaymentStatusColor(invoice.payment.status);
+  const statusLabel = getPaymentStatusLabel(invoice.payment.status);
+
   // HandleLogic
   const handlePaymentPress = () => {
     setShowCheckout(true);
@@ -113,7 +121,27 @@ const Detail = ({ visible, invoice, onPaymentPress, onClose }: Props) => {
             >
               {/* Invoice Info */}
               <View style={styles.detailSection}>
-                <Text style={styles.sectionTitle}>Thông tin hóa đơn</Text>
+                <View>
+                  <Text style={styles.sectionTitle}>Thông tin hóa đơn</Text>
+
+                  <View
+                    style={[
+                      styles.statusBadge,
+                      { backgroundColor: statusColor + "20" },
+                    ]}
+                  >
+                    <View
+                      style={[
+                        styles.statusDot,
+                        { backgroundColor: statusColor },
+                      ]}
+                    />
+                    <Text style={[styles.statusText, { color: statusColor }]}>
+                      {statusLabel}
+                    </Text>
+                  </View>
+                </View>
+
                 <View style={styles.detailRow}>
                   <Text style={styles.detailLabel}>Mã hóa đơn</Text>
                   <Text style={styles.detailValue}>{invoice.invoice.id}</Text>

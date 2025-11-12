@@ -191,8 +191,6 @@ const InvoiceScreen = () => {
       amount: totalAmount + 10000,
     };
 
-    console.log("Payload gửi lên BE:", payload);
-
     const res = await payForCharging(payload);
 
     if (!res.success) {
@@ -228,6 +226,7 @@ const InvoiceScreen = () => {
   // Check
   const hasSelectedInvoice = selectedInvoiceIds.length > 0;
   const isNoUnpaid = (summary?.unpaid?.count ?? 0) === 0;
+  const isCompany = user?.isCompany;
 
   // UseEffect
   useEffect(() => {
@@ -275,18 +274,23 @@ const InvoiceScreen = () => {
         <TouchableOpacity style={styles.backContainer} onPress={handleBack}>
           <Ionicons name="chevron-back" size={25} color={COLORS.white} />
         </TouchableOpacity>
-        <Text style={styles.title}>Lịch sử giao dịch</Text>
-        <TouchableOpacity
-          onPress={handleAddPaymentPress}
-          disabled={isNoUnpaid}
-          style={isNoUnpaid && { opacity: 0.5 }}
-        >
-          <MaterialCommunityIcons
-            name="credit-card-plus"
-            size={25}
-            color={COLORS.white}
-          />
-        </TouchableOpacity>
+        <Text style={styles.title}>Thanh toán phí sạc</Text>
+
+        {isCompany ? (
+          <View></View>
+        ) : (
+          <TouchableOpacity
+            onPress={handleAddPaymentPress}
+            disabled={isNoUnpaid}
+            style={isNoUnpaid && { opacity: 0.5 }}
+          >
+            <MaterialCommunityIcons
+              name="credit-card-plus"
+              size={25}
+              color={COLORS.white}
+            />
+          </TouchableOpacity>
+        )}
       </View>
 
       {/* Filters */}

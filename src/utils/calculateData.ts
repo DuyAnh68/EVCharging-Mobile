@@ -1,4 +1,5 @@
 import { Invoice } from "@src/types/invoice";
+import { Transaction } from "@src/types/transaction";
 import { formatRoundedAmount, formatTimeDuration } from "@src/utils/formatData";
 
 // CHARGE
@@ -91,4 +92,17 @@ export const calcTotalAmount = (selectedInvoices: Invoice[]): number => {
     const rounded = formatRoundedAmount(inv.totalAmount);
     return total + rounded;
   }, 0);
+};
+
+// TRANSACTION
+export const calcSummaryByType = (
+  transactions: Transaction[],
+  type: Transaction["type"]
+) => {
+  const filtered = transactions.filter((t) => t.type === type);
+
+  const count = filtered.length;
+  const totalAmount = filtered.reduce((sum, t) => sum + (t.vnpAmount || 0), 0);
+
+  return { count, totalAmount };
 };

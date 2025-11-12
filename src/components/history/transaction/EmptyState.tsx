@@ -9,13 +9,15 @@ interface EmptyStateProps {
 export default function EmptyState({ filter }: EmptyStateProps) {
   const getEmptyMessage = (filter: EmptyStateProps["filter"]) => {
     switch (filter) {
-      case "paid":
-        return "Chưa có hóa đơn nào được thanh toán!";
-      case "unpaid":
-        return "Không có hóa đơn chưa thanh toán!";
+      case "subscription":
+        return "Không có giao dịch thanh toán gói!";
+      case "base_fee":
+        return "Không có giao dịch thanh toán phí đặt chỗ!";
+      case "charging":
+        return "Không có giao dịch thanh toán phí sạc!";
       case undefined:
       default:
-        return "Chưa có hóa đơn nào được ghi nhận!";
+        return "Chưa có giao dịch nào được ghi nhận!";
     }
   };
 
@@ -26,7 +28,7 @@ export default function EmptyState({ filter }: EmptyStateProps) {
       </View>
       <Text style={styles.message}>{getEmptyMessage(filter)}</Text>
       <Text style={styles.subtitle}>
-        Hãy bắt đầu sạc điện xe của bạn để tạo các hóa đơn.
+        Hãy bắt đầu sạc điện xe của bạn để tạo các giao dịch.
       </Text>
     </View>
   );

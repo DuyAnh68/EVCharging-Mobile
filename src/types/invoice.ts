@@ -7,6 +7,7 @@ export interface Invoice {
   vehicle: {
     model: string;
     plateNumber: string;
+    isActive: boolean;
   };
   duration: string;
   energyDelivered: string;
