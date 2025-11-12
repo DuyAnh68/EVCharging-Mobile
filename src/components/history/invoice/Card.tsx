@@ -33,6 +33,9 @@ export const Card: React.FC<CardProps> = ({
   const statusColor = getPaymentStatusColor(invoice.paymentStatus);
   const statusLabel = getPaymentStatusLabel(invoice.paymentStatus);
 
+  // Check
+  const isActive = invoice.vehicle.isActive;
+
   // Use Effect
   useEffect(() => {
     const { date: dateFormatted, time: timeFormatted } = formatDateTime(
@@ -62,13 +65,39 @@ export const Card: React.FC<CardProps> = ({
             <Text style={styles.model}>{invoice.vehicle.model}</Text>
           </View>
         </View>
-        <View
-          style={[styles.statusBadge, { backgroundColor: `${statusColor}20` }]}
-        >
-          <View style={[styles.statusDot, { backgroundColor: statusColor }]} />
-          <Text style={[styles.statusText, { color: statusColor }]}>
-            {statusLabel}
-          </Text>
+
+        <View style={styles.statusContainer}>
+          <View
+            style={[
+              styles.statusBadge,
+              { backgroundColor: `${statusColor}20` },
+            ]}
+          >
+            <View
+              style={[styles.statusDot, { backgroundColor: statusColor }]}
+            />
+            <Text style={[styles.statusText, { color: statusColor }]}>
+              {statusLabel}
+            </Text>
+          </View>
+
+          {!isActive && (
+            <View
+              style={[
+                styles.statusBadge,
+                {
+                  backgroundColor: COLORS.danger + "20",
+                },
+              ]}
+            >
+              <View
+                style={[styles.statusDot, { backgroundColor: COLORS.danger }]}
+              />
+              <Text style={[styles.statusText, { color: COLORS.danger }]}>
+                Xe bị xóa
+              </Text>
+            </View>
+          )}
         </View>
       </View>
 
@@ -162,6 +191,10 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     alignItems: "center",
     marginRight: 12,
+  },
+  statusContainer: {
+    gap: 3,
+    alignItems: "flex-end",
   },
   statusBadge: {
     paddingHorizontal: 10,

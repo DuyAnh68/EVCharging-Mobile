@@ -24,7 +24,7 @@ export const useInvoice = () => {
       if (!isSuccess) {
         return {
           success: false,
-          message: res.message || "Không thể lấy danh sách giao dịch!",
+          message: res.message || "Không thể lấy danh sách hóa đơn!",
         };
       }
 
@@ -37,7 +37,7 @@ export const useInvoice = () => {
     } catch (error: any) {
       return {
         success: false,
-        message: "Không thể lấy danh sách giao dịch!",
+        message: "Không thể lấy danh sách hóa đơn!",
       };
     } finally {
       hideLoading();
@@ -55,7 +55,7 @@ export const useInvoice = () => {
       if (!isSuccess) {
         return {
           success: false,
-          message: res.message || "Không thể lấy chi tiết giao dịch!",
+          message: res.message || "Không thể lấy chi tiết hóa đơn!",
         };
       }
 
@@ -66,7 +66,7 @@ export const useInvoice = () => {
     } catch (error: any) {
       return {
         success: false,
-        message: "Không thể lấy chi tiết giao dịch!",
+        message: "Không thể lấy chi tiết hóa đơn!",
       };
     } finally {
       hideLoading();
