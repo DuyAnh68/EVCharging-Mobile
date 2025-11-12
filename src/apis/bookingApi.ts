@@ -1,6 +1,12 @@
 import axiosClient from "@src/apis/axiosClient";
 import { BookingReq } from "@src/types/booking";
 
+interface PayForBaseFeeReq {
+  amount: number;
+  userId: string;
+  booking_id: string;
+}
+
 export const bookingApi = {
   create: async (data: BookingReq) => {
     const res = await axiosClient.post(`/bookings`, data);
@@ -11,8 +17,8 @@ export const bookingApi = {
     };
   },
 
-  getAllMyBooking: async () => {
-    const res = await axiosClient.get("/bookings/me");
+  getAllMyBooking: async (userId: string) => {
+    const res = await axiosClient.get(`/bookings/user/${userId}`);
     return {
       status: res.status,
       data: res.data,
@@ -59,6 +65,15 @@ export const bookingApi = {
 
   delete: async (id: string) => {
     const res = await axiosClient.delete(`/bookings/${id}`);
+    return {
+      status: res.status,
+      data: res.data,
+      message: res.data?.message,
+    };
+  },
+
+  payForBaseFee: async (data: PayForBaseFeeReq) => {
+    const res = await axiosClient.post(`/payment/pay-for-base-fee`, data);
     return {
       status: res.status,
       data: res.data,

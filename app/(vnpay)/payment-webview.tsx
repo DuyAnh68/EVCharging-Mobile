@@ -10,7 +10,7 @@ import { WebView } from "react-native-webview";
 
 export default function PaymentWebView() {
   const { type, returnPath } = useLocalSearchParams<{
-    type: "createSub" | "updateSub" | "charging_fee";
+    type: "createSub" | "updateSub" | "charging_fee" | "booking";
     returnPath?: string;
   }>();
   // Use Ref

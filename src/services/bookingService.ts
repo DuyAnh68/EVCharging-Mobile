@@ -12,8 +12,8 @@ export const bookingService = {
     return await bookingRepo.getAllFilterChargingPoints(chargingPointId);
   },
 
-  getAllMyBooking: async () => {
-    return await bookingRepo.getAllMyBooking();
+  getAllMyBooking: async (userId: string) => {
+    return await bookingRepo.getAllMyBooking(userId);
   },
 
   // Get booking by ID
@@ -29,5 +29,13 @@ export const bookingService = {
   // Delete booking
   delete: async (id: string) => {
     return await bookingRepo.delete(id);
+  },
+
+  payForBaseFee: async (amount: number, userId: string, bookingId: string) => {
+    const res = await bookingRepo.payForBaseFee(amount, userId, bookingId);
+    if (res.status !== 200 && res.status !== 201) {
+      throw new Error(res.message || "Payment failed");
+    }
+    return res.data;
   },
 };
