@@ -30,16 +30,20 @@ export const Card: React.FC<CardProps> = ({
   const [time, setTime] = useState<string>("");
 
   // Get
-  const statusColor = getPaymentStatusColor(invoice.paymentStatus);
-  const statusLabel = getPaymentStatusLabel(invoice.paymentStatus);
+  const statusColor = getPaymentStatusColor(invoice.payment.paymentStatus);
+  const statusLabel = getPaymentStatusLabel(invoice.payment.paymentStatus);
 
   // Check
   const isActive = invoice.vehicle.isActive;
+  const isPaid = invoice.payment.paymentStatus === "paid";
+  const total = isPaid
+    ? invoice.pricing.totalAmount
+    : invoice.pricing.chargingFee;
 
   // Use Effect
   useEffect(() => {
     const { date: dateFormatted, time: timeFormatted } = formatDateTime(
-      invoice.createdAt
+      invoice.invoice.createdAt
     );
 
     setDate(dateFormatted);
@@ -49,7 +53,7 @@ export const Card: React.FC<CardProps> = ({
   return (
     <TouchableOpacity
       style={[styles.card, isPayment && isSelected && styles.cardSelected]}
-      onPress={() => onPress?.(invoice.id)}
+      onPress={() => onPress?.(invoice.invoice.id)}
       activeOpacity={0.8}
     >
       {/* Header */}
@@ -118,25 +122,25 @@ export const Card: React.FC<CardProps> = ({
       <View style={styles.infoGrid}>
         <InvoiceInfo
           label="Pin"
-          value={invoice.batteryCharged}
+          value={invoice.session.finalBattery}
           icon="battery-charging-sharp"
           color={COLORS.success}
         />
         <InvoiceInfo
           label="Thời lượng sạc"
-          value={calcSecondsToDuration(invoice.duration)}
+          value={calcSecondsToDuration(invoice.session.duration)}
           icon="time"
           color={COLORS.black}
         />
         <InvoiceInfo
           label="Trạm sạc"
-          value={invoice.station}
+          value={invoice.station.name}
           icon="location"
           color={COLORS.info}
         />
         <InvoiceInfo
-          label="Tổng tiền"
-          value={formatRoundedAmount(invoice.totalAmount, { asString: true })}
+          label={isPaid ? "Tổng tiền" : "Cần thanh toán"}
+          value={formatRoundedAmount(total, { asString: true })}
           icon="card"
           color={COLORS.warning}
         />

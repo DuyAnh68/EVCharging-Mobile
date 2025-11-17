@@ -18,7 +18,6 @@ import { useInvoice } from "@src/hooks/useInvoice";
 import { COLORS, TEXTS } from "@src/styles/theme";
 import type {
   Invoice,
-  InvoiceDetail,
   InvoiceResponse,
   PayForChargingReq,
 } from "@src/types/invoice";
@@ -48,7 +47,7 @@ const InvoiceScreen = () => {
     undefined
   );
   const [selectedInvoiceData, setSelectedInvoiceData] =
-    useState<InvoiceDetail | null>(null);
+    useState<Invoice | null>(null);
   const [showDetail, setShowDetail] = useState<boolean>(false);
   const [isPayment, setIsPayment] = useState<boolean>(false);
   const [selectedInvoiceIds, setSelectedInvoiceIds] = useState<string[]>([]);
@@ -143,7 +142,9 @@ const InvoiceScreen = () => {
         }
 
         // Cập nhật list hóa đơn đã chọn
-        const newList = invoices.filter((inv) => newIds.includes(inv.id));
+        const newList = invoices.filter((inv) =>
+          newIds.includes(inv.invoice.id)
+        );
         setSelectedInvoiceList(newList);
 
         return newIds;
@@ -158,10 +159,14 @@ const InvoiceScreen = () => {
   };
 
   const handleSelectAll = () => {
-    const unpaidIds = invoices
-      .filter((item) => item.paymentStatus === "unpaid")
-      .map((item) => item.id);
+    const unpaidInvoices = invoices.filter(
+      (item) => item.payment.paymentStatus === "unpaid"
+    );
+
+    const unpaidIds = unpaidInvoices.map((item) => item.invoice.id);
+
     setSelectedInvoiceIds(unpaidIds);
+    setSelectedInvoiceList(unpaidInvoices);
   };
 
   const handleDeselectAll = () => {
@@ -182,7 +187,7 @@ const InvoiceScreen = () => {
       : selectedInvoiceIds;
 
     const totalAmount = selectedInvoiceData
-      ? formatRoundedAmount(selectedInvoiceData.pricing.charging_fee)
+      ? formatRoundedAmount(selectedInvoiceData.pricing.chargingFee)
       : calcTotalAmount(selectedInvoiceList || []);
 
     const payload: PayForChargingReq = {
@@ -262,7 +267,7 @@ const InvoiceScreen = () => {
       invoice={item}
       onPress={handleInvoicePress}
       isPayment={isPayment}
-      isSelected={selectedInvoiceIds.includes(item.id)}
+      isSelected={selectedInvoiceIds.includes(item.invoice.id)}
     />
   );
 
@@ -352,7 +357,7 @@ const InvoiceScreen = () => {
       <FlatList
         data={invoices}
         renderItem={renderItem}
-        keyExtractor={(item) => item.id}
+        keyExtractor={(item) => item.invoice.id}
         ListEmptyComponent={
           !isLoading ? <EmptyState filter={filterStatus} /> : null
         }

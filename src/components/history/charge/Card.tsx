@@ -130,7 +130,7 @@ export default function Card({ session, onPress }: CardProps) {
       <View style={styles.infoGrid}>
         <SessionInfo
           label="Pin"
-          value={`${session.currentBattery}%`}
+          value={`${session.initialBattery}% - ${session.finalBattery}%`}
           icon="battery-charging-sharp"
           color={COLORS.success}
         />
@@ -147,8 +147,8 @@ export default function Card({ session, onPress }: CardProps) {
           color={COLORS.info}
         />
         <SessionInfo
-          label="Tổng tiền"
-          value={formatRoundedAmount(session.totalAmount, { asString: true })}
+          label="Phí sạc"
+          value={formatRoundedAmount(session.chargingFee, { asString: true })}
           icon="card"
           color={COLORS.warning}
         />
@@ -168,7 +168,7 @@ export default function Card({ session, onPress }: CardProps) {
           <Text style={styles.feeLabel}>Giá/kWh</Text>
           <Text style={styles.feeValue}>{formatVND(session.price)}</Text>
         </View>
-        <View style={styles.feeRow}>
+        {/* <View style={styles.feeRow}>
           <View
             style={{
               flexDirection: "row",
@@ -186,7 +186,7 @@ export default function Card({ session, onPress }: CardProps) {
         <View style={styles.feeRow}>
           <Text style={styles.feeLabel}>Phí đặt chỗ</Text>
           <Text style={styles.feeValue}>{formatVND(session.baseFee)}</Text>
-        </View>
+        </View> */}
       </View>
     </View>
   );

@@ -89,7 +89,7 @@ export const calcSecondsToDuration = (input: number | string): string => {
  */
 export const calcTotalAmount = (selectedInvoices: Invoice[]): number => {
   return selectedInvoices.reduce((total, inv) => {
-    const rounded = formatRoundedAmount(inv.totalAmount);
+    const rounded = formatRoundedAmount(inv.pricing.chargingFee);
     return total + rounded;
   }, 0);
 };
