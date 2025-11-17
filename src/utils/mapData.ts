@@ -1,9 +1,4 @@
-import {
-  Invoice,
-  InvoiceDetail,
-  InvoiceResponse,
-  Summary,
-} from "@src/types/invoice";
+import { Invoice, InvoiceResponse, Summary } from "@src/types/invoice";
 import { SessionDetail } from "@src/types/session";
 import { SubscriptionPlan } from "@src/types/subscription";
 import { Transaction } from "@src/types/transaction";
@@ -121,6 +116,8 @@ export const toSessionDetail = (data: any): SessionDetail => ({
   initialBattery: data.initial_battery_percentage,
   targetBattery: data.target_battery_percentage,
   currentBattery: data.current_battery_percentage,
+  finalBattery: data.final_battery_percentage,
+  batteryChargedPercentage: data.battery_charged_percentage,
   energyDeliveredKwh: data.energy_delivered_kwh,
   chargingMinutes: data.charging_duration_minutes,
   chargingHours: data.charging_duration_hours,
@@ -138,41 +135,6 @@ export const toSessionListDetail = (data: any): SessionDetail[] => {
 };
 
 // INVOICE
-export const toInvoice = (data: any): Invoice => {
-  // Tách model và biển số
-  let model = "";
-  let plateNumber = "";
-  if (typeof data.vehicle === "string" && data.vehicle.includes(" - ")) {
-    [model, plateNumber] = data.vehicle.split(" - ");
-  } else {
-    model = data.vehicle || "";
-  }
-
-  // Chuẩn hóa tiền
-  let totalAmount = data.total_amount || "0đ";
-  if (typeof totalAmount === "string") {
-    totalAmount = totalAmount.replace(/\s*đ/, "đ").trim();
-  }
-
-  return {
-    id: data.id,
-    station: data.station,
-    address: data.address,
-    vehicle: {
-      model,
-      plateNumber,
-      isActive: data.vehicle_is_active,
-    },
-    duration: data.duration,
-    energyDelivered: data.energy_delivered,
-    batteryCharged: data.battery_charged,
-    totalAmount,
-    paymentStatus: data.payment_status,
-    paymentMethod: data.payment_method,
-    createdAt: data.created_at,
-  };
-};
-
 export const toSummary = (data: any): Summary => {
   const normalizeAmount = (amount: string | undefined): string => {
     if (!amount) return "0đ";
@@ -205,7 +167,7 @@ export const toInvoiceList = (data: any): InvoiceResponse => ({
       },
 });
 
-export const toInvoiceDetail = (data: any): InvoiceDetail => ({
+export const toInvoice = (data: any): Invoice => ({
   invoice: {
     id: data.invoice_info.id,
     createdAt: data.invoice_info.created_at,
@@ -236,12 +198,31 @@ export const toInvoiceDetail = (data: any): InvoiceDetail => ({
   pricing: {
     baseFee: data.pricing.base_fee,
     price: data.pricing.price_per_kwh,
-    charging_fee: data.pricing.charging_fee,
-    total_amount: data.pricing.total_amount,
+    originalChargingFee: data.pricing.original_charging_fee,
+    subscriptionDiscount: data.pricing.subscription_discount
+      ? {
+          id: data.pricing.subscription_discount.subscription_id,
+          discountPercentage:
+            data.pricing.subscription_discount.discount_percentage,
+          discountAmount: data.pricing.subscription_discount.discount_amount,
+        }
+      : undefined,
+    chargingFee: data.pricing.charging_fee,
+    overtime: {
+      hasOvertime: data.pricing.overtime.has_overtime,
+      bookingEndTime: data.pricing.overtime.booking_end_time,
+      overtimeMinutes: data.pricing.overtime.overtime_minutes,
+      overtimeFeeRate: data.pricing.overtime.overtime_fee_rate,
+      overtimeFee: data.pricing.overtime.overtime_fee,
+    },
+    totalAmount: data.pricing.total_amount,
   },
   payment: {
-    method: data.payment.method,
-    status: data.payment.status,
+    finalAmount: data.payment_data.final_amount,
+    paymentStatus: data.payment_data.payment_status,
+    paymentMethod: data.payment_data.payment_method,
+    paymentDate: data.payment_data.payment_date,
+    transactdatId: data.payment_data.transaction_id,
   },
 });
 

@@ -48,6 +48,17 @@ export function formatDateTime(dateString: string) {
 }
 
 /**
+ * Định dạng chuỗi về dạng tiền, ví dụ: "6.450 đ" → 6450
+ */
+export const parseVND = (amount: string | number | undefined): number => {
+  if (!amount) return 0;
+  if (typeof amount === "number") return amount;
+
+  const numeric = amount.replace(/[^\d]/g, "");
+  return Number(numeric || 0);
+};
+
+/**
  * Định dạng số tiền về dạng chuỗi VND, ví dụ: 15200000 → "15.200.000đ"
  */
 export const formatVND = (amount: string | number): string => {
@@ -56,8 +67,7 @@ export const formatVND = (amount: string | number): string => {
   // Nếu là string → loại bỏ các ký tự không phải số (đ, VND, dấu cách, dấu phẩy,...)
   if (typeof amount === "string") {
     amount = amount
-      .replace(/đ|VND/gi, "") // bỏ đ hoặc VND (không phân biệt hoa thường)
-      .replace(/[^\d.-]/g, "") // bỏ mọi ký tự không phải số, dấu . hoặc -
+      .replace(/[^\d]/g, "") // giữ lại đúng số, bỏ toàn bộ ký tự khác
       .trim();
   }
 

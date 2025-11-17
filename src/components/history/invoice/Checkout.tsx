@@ -56,7 +56,7 @@ const Checkout = ({
         <View style={styles.infoRow}>
           <Text style={styles.cardLabel}>Tiền:</Text>
           <Text style={styles.value}>
-            {formatRoundedAmount(item.totalAmount, { asString: true })}
+            {formatRoundedAmount(item.pricing.chargingFee, { asString: true })}
           </Text>
         </View>
       </View>
@@ -86,7 +86,7 @@ const Checkout = ({
               <FlatList
                 data={invoices}
                 renderItem={renderSubscriptionItem}
-                keyExtractor={(item) => item.id}
+                keyExtractor={(item) => item.invoice.id}
                 showsVerticalScrollIndicator={false}
                 contentContainerStyle={styles.list}
               />

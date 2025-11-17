@@ -14,6 +14,8 @@ export interface SessionDetail {
   initialBattery: number;
   targetBattery: number;
   currentBattery: number;
+  finalBattery: number;
+  batteryChargedPercentage: number;
   energyDeliveredKwh: number;
   chargingMinutes: number;
   chargingHours: number;

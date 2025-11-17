@@ -1,10 +1,10 @@
 import { invoiceApi } from "@src/apis/invoiceApi";
 import {
-  InvoiceDetail,
+  Invoice,
   InvoiceResponse,
   PayForChargingReq,
 } from "@src/types/invoice";
-import { toInvoiceDetail, toInvoiceList } from "@src/utils/mapData";
+import { toInvoice, toInvoiceList } from "@src/utils/mapData";
 
 export const invoiceRepo = {
   // Get List
@@ -22,7 +22,7 @@ export const invoiceRepo = {
     const res = await invoiceApi.getInvoiceDetail(invoiceId);
 
     const raw = res.data;
-    const mapData: InvoiceDetail = toInvoiceDetail(raw || []);
+    const mapData: Invoice = toInvoice(raw || []);
 
     return { ...res, data: mapData };
   },

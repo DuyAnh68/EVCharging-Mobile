@@ -4,7 +4,7 @@ import LoadingOverlay from "@src/components/LoadingOverlay";
 import ModalPopup from "@src/components/ModalPopup";
 import { useInvoice } from "@src/hooks/useInvoice";
 import { COLORS, TEXTS } from "@src/styles/theme";
-import { InvoiceDetail } from "@src/types/invoice";
+import { Invoice } from "@src/types/invoice";
 import { calcChargingDuration } from "@src/utils/calculateData";
 import {
   formatDateTime,
@@ -28,7 +28,7 @@ import {
 
 type Props = {
   visible: boolean;
-  invoice: InvoiceDetail;
+  invoice: Invoice;
   onPaymentPress: () => void;
   onClose: (isPay: boolean) => void;
 };
@@ -36,6 +36,7 @@ type Props = {
 const Detail = ({ visible, invoice, onPaymentPress, onClose }: Props) => {
   // State
   const [formattedDate, setFormattedDate] = useState<string>("");
+  const [paymentDate, setPaymentDate] = useState<string>("");
   const [startDate, setStartDate] = useState<string>("");
   const [startTime, setStartTimeFormatted] = useState<string>("");
   const [endTime, setEndTimeFormatted] = useState<string>("");
@@ -66,6 +67,13 @@ const Detail = ({ visible, invoice, onPaymentPress, onClose }: Props) => {
       setEndTimeFormatted(endTimeFormated);
       setStartTimeWithSeconds(startTimeFull);
       setEndTimeWithSeconds(endTimeFull);
+
+      if (invoice.payment.paymentDate) {
+        const { dateWithMinute: paymentDateFormatted } = formatDateTime(
+          invoice.payment.paymentDate
+        );
+        setPaymentDate(paymentDateFormatted);
+      }
     }
   }, [invoice]);
 
@@ -76,12 +84,14 @@ const Detail = ({ visible, invoice, onPaymentPress, onClose }: Props) => {
   );
 
   // Check
-  const isPaid = invoice.payment.status === "paid";
+  const isPaid = invoice.payment.paymentStatus === "paid";
   const isActive = invoice.vehicle.isActive;
+  const isDiscount = !!invoice.pricing.subscriptionDiscount;
+  const isOvertime = invoice.pricing.overtime.hasOvertime;
 
   // Get
-  const statusColor = getPaymentStatusColor(invoice.payment.status);
-  const statusLabel = getPaymentStatusLabel(invoice.payment.status);
+  const statusColor = getPaymentStatusColor(invoice.payment.paymentStatus);
+  const statusLabel = getPaymentStatusLabel(invoice.payment.paymentStatus);
 
   // HandleLogic
   const handlePaymentPress = () => {
@@ -152,6 +162,24 @@ const Detail = ({ visible, invoice, onPaymentPress, onClose }: Props) => {
                   <Text style={styles.detailValue}>{formattedDate}</Text>
                 </View>
               </View>
+
+              {isPaid && (
+                <View style={styles.detailSection}>
+                  <Text style={styles.sectionTitle}>Thông tin giao dịch</Text>
+
+                  <View style={styles.detailRow}>
+                    <Text style={styles.detailLabel}>Mã giao dịch</Text>
+                    <Text style={styles.detailValue}>
+                      {invoice.payment.transactdatId}
+                    </Text>
+                  </View>
+
+                  <View style={[styles.detailRow, { borderBottomWidth: 0 }]}>
+                    <Text style={styles.detailLabel}>Ngày thanh toán</Text>
+                    <Text style={styles.detailValue}>{paymentDate}</Text>
+                  </View>
+                </View>
+              )}
 
               {/* Station Info */}
               <View style={styles.detailSection}>
@@ -256,22 +284,105 @@ const Detail = ({ visible, invoice, onPaymentPress, onClose }: Props) => {
               <View
                 style={[styles.detailSection, isPaid && { marginBottom: 80 }]}
               >
-                <View style={styles.feeRow}>
-                  <Text style={styles.feeLabel}>Lượng điện đã xài</Text>
-                  <Text style={styles.feeValue}>
-                    {invoice.session.energyDelivered}
-                  </Text>
+                <View style={styles.feeContainer}>
+                  <View style={styles.feeRow}>
+                    <Text style={styles.feeLabel}>Lượng điện đã xài</Text>
+                    <Text style={styles.feeValue}>
+                      {invoice.session.energyDelivered}
+                    </Text>
+                  </View>
+
+                  <View style={styles.feeRow}>
+                    <Text style={styles.feeLabel}>Giá/kWh</Text>
+                    <Text style={styles.feeValue}>
+                      {formatVND(invoice.pricing.price)}
+                    </Text>
+                  </View>
+
+                  <View style={styles.divider2} />
+
+                  <View style={styles.feeRow}>
+                    <View
+                      style={{
+                        flexDirection: "row",
+                        alignItems: "center",
+                        gap: 2,
+                      }}
+                    >
+                      <Text style={styles.feeLabel}>Phí sạc</Text>
+                      <Text style={{ fontSize: 8, color: TEXTS.secondary }}>
+                        (Lượng điện x Giá)
+                      </Text>
+                    </View>
+                    <Text style={styles.feeValue}>
+                      {formatVND(invoice.pricing.originalChargingFee)}
+                    </Text>
+                  </View>
+
+                  {isDiscount && (
+                    <>
+                      <View style={styles.feeRow}>
+                        <View
+                          style={{
+                            flexDirection: "row",
+                            alignItems: "center",
+                            gap: 2,
+                          }}
+                        >
+                          <Text style={styles.feeLabel}>Ưu đãi gói</Text>
+                          <Text style={{ fontSize: 9, color: TEXTS.secondary }}>
+                            (
+                            {
+                              invoice.pricing.subscriptionDiscount
+                                ?.discountPercentage
+                            }
+                            )
+                          </Text>
+                        </View>
+                        <Text style={styles.feeValue}>
+                          -
+                          {formatVND(
+                            invoice.pricing.subscriptionDiscount
+                              ?.discountAmount ?? "0"
+                          )}
+                        </Text>
+                      </View>
+
+                      <View style={styles.divider2} />
+
+                      <Text style={styles.valueRight}>
+                        {formatVND(invoice.pricing.chargingFee)}
+                      </Text>
+                    </>
+                  )}
                 </View>
 
-                <View style={styles.feeRow}>
-                  <Text style={styles.feeLabel}>Giá/kWh</Text>
-                  <Text style={styles.feeValue}>
-                    {formatVND(invoice.pricing.price)}
-                  </Text>
-                </View>
+                {isPaid && (
+                  <View style={styles.feeContainer}>
+                    <View style={styles.feeRow}>
+                      <Text style={styles.feeLabel}>Phí đặt chỗ</Text>
+                      <Text style={styles.feeValue}>
+                        {formatVND(invoice.pricing.baseFee)}
+                      </Text>
+                    </View>
+                  </View>
+                )}
 
-                {isPaid ? (
-                  <>
+                {isOvertime && (
+                  <View style={styles.feeContainer}>
+                    <View style={styles.feeRow}>
+                      <Text style={styles.feeLabel}>Sạc quá thời gian đặt</Text>
+                      <Text style={styles.feeValue}>
+                        {invoice.pricing.overtime.overtimeMinutes}p
+                      </Text>
+                    </View>
+                    <View style={styles.feeRow}>
+                      <Text style={styles.feeLabel}>Giá/Phút</Text>
+                      <Text style={styles.feeValue}>
+                        {formatVND(invoice.pricing.overtime.overtimeFeeRate)}
+                      </Text>
+                    </View>
+                    <View style={styles.divider2} />
                     <View style={styles.feeRow}>
                       <View
                         style={{
@@ -280,22 +391,20 @@ const Detail = ({ visible, invoice, onPaymentPress, onClose }: Props) => {
                           gap: 2,
                         }}
                       >
-                        <Text style={styles.feeLabel}>Phí sạc</Text>
+                        <Text style={styles.feeLabel}>Phí phạt</Text>
                         <Text style={{ fontSize: 8, color: TEXTS.secondary }}>
-                          (Lượng điện x Giá)
+                          (Thời gian x Giá)
                         </Text>
                       </View>
                       <Text style={styles.feeValue}>
-                        {formatVND(invoice.pricing.charging_fee)}
+                        {formatVND(invoice.pricing.overtime.overtimeFee)}
                       </Text>
                     </View>
-                    <View style={styles.feeRow}>
-                      <Text style={styles.feeLabel}>Phí đặt chỗ</Text>
-                      <Text style={styles.feeValue}>
-                        {formatVND(invoice.pricing.baseFee)}
-                      </Text>
-                    </View>
+                  </View>
+                )}
 
+                {isPaid ? (
+                  <>
                     <View
                       style={[
                         styles.detailRow,
@@ -303,20 +412,10 @@ const Detail = ({ visible, invoice, onPaymentPress, onClose }: Props) => {
                         { borderBottomWidth: 0 },
                       ]}
                     >
-                      <View
-                        style={{
-                          flexDirection: "row",
-                          alignItems: "center",
-                          gap: 2,
-                        }}
-                      >
-                        <Text style={styles.totalLabel}>Tổng tiền</Text>
-                        <Text style={{ fontSize: 9, color: COLORS.primary }}>
-                          (Phí sạc + Phí đặt chỗ)
-                        </Text>
-                      </View>
+                      <Text style={styles.totalLabel}>Tổng tiền</Text>
+
                       <Text style={styles.totalValue}>
-                        {formatRoundedAmount(invoice.pricing.total_amount, {
+                        {formatRoundedAmount(invoice.pricing.totalAmount, {
                           asString: true,
                         })}
                       </Text>
@@ -330,20 +429,10 @@ const Detail = ({ visible, invoice, onPaymentPress, onClose }: Props) => {
                       { borderBottomWidth: 0 },
                     ]}
                   >
-                    <View
-                      style={{
-                        flexDirection: "row",
-                        alignItems: "center",
-                        gap: 2,
-                      }}
-                    >
-                      <Text style={styles.totalLabel}>Tổng tiền</Text>
-                      <Text style={{ fontSize: 9, color: COLORS.primary }}>
-                        (Lượng điện x Giá)
-                      </Text>
-                    </View>
+                    <Text style={styles.totalLabel}>Cần thanh toán</Text>
+
                     <Text style={styles.totalValue}>
-                      {formatRoundedAmount(invoice.pricing.charging_fee, {
+                      {formatRoundedAmount(invoice.payment.finalAmount, {
                         asString: true,
                       })}
                     </Text>
@@ -491,6 +580,18 @@ const styles = StyleSheet.create({
     backgroundColor: COLORS.primary,
     marginBottom: 12,
   },
+  divider2: {
+    height: 1,
+    backgroundColor: COLORS.gray300,
+    marginBottom: 5,
+  },
+  feeContainer: {
+    padding: 10,
+    borderWidth: 1,
+    borderColor: COLORS.primaryLight,
+    borderRadius: 8,
+    marginBottom: 7,
+  },
   feeRow: {
     flexDirection: "row",
     justifyContent: "space-between",
@@ -507,8 +608,13 @@ const styles = StyleSheet.create({
     fontWeight: "600",
     color: TEXTS.primary,
   },
+  valueRight: {
+    fontSize: 16,
+    fontWeight: "600",
+    color: TEXTS.primary,
+    textAlign: "right",
+  },
   totalRow: {
-    marginTop: 7,
     backgroundColor: COLORS.green50,
     paddingHorizontal: 12,
     paddingVertical: 14,
