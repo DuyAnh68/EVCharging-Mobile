@@ -1,5 +1,6 @@
 import { FontAwesome5, Ionicons } from "@expo/vector-icons";
 import Card from "@src/components/history/transaction/Card";
+import Detail from "@src/components/history/transaction/Detail";
 import EmptyState from "@src/components/history/transaction/EmptyState";
 import FilterType from "@src/components/history/transaction/FilterType";
 import ModalPopup from "@src/components/ModalPopup";
@@ -8,7 +9,7 @@ import { useTransaction } from "@src/hooks/useTransaction";
 import { COLORS, TEXTS } from "@src/styles/theme";
 import { Summary, Transaction } from "@src/types/transaction";
 import { router } from "expo-router";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import {
   FlatList,
   RefreshControl,
@@ -26,10 +27,16 @@ const TransactionScreen = () => {
   const [refreshing, setRefreshing] = useState(false);
   const [showError, setShowError] = useState<boolean>(false);
   const [errorMsg, setErrorMsg] = useState<string>("");
+  const [selectedTransaction, setSelectedTransaction] =
+    useState<Transaction | null>(null);
+  const [showDetail, setShowDetail] = useState(false);
 
   // Hook
   const { isLoading } = useLoading();
   const { getTransactions } = useTransaction();
+
+  // Ref
+  const flatListRef = useRef<FlatList>(null);
 
   // Api
   const fetchTransactions = useCallback(async () => {
@@ -69,14 +76,30 @@ const TransactionScreen = () => {
     setFilterType((prev) => (prev === type ? undefined : type));
   };
 
+  const handleOpenDetail = (transaction: Transaction) => {
+    setSelectedTransaction(transaction);
+    setShowDetail(true);
+  };
+
+  const handleCloseDetail = () => {
+    setShowDetail(false);
+    setSelectedTransaction(null);
+  };
+
   // UseEffect
   useEffect(() => {
     fetchTransactions();
   }, [filterType]);
 
+  useEffect(() => {
+    if (transactions.length > 0) {
+      flatListRef.current?.scrollToOffset({ offset: 0, animated: true });
+    }
+  }, [transactions]);
+
   // Render
   const renderItem = ({ item }: { item: Transaction }) => (
-    <Card transaction={item} />
+    <Card transaction={item} onPress={() => handleOpenDetail(item)} />
   );
 
   return (
@@ -103,6 +126,7 @@ const TransactionScreen = () => {
 
       {/* Transaction List */}
       <FlatList
+        ref={flatListRef}
         data={transactions}
         renderItem={renderItem}
         keyExtractor={(item) => item.id}
@@ -125,6 +149,18 @@ const TransactionScreen = () => {
           />
         }
       />
+
+      {/* Detail */}
+      {selectedTransaction && (
+        <>
+          <View style={styles.overlay} />
+          <Detail
+            visible={showDetail}
+            invoices={selectedTransaction.invoices}
+            onClose={handleCloseDetail}
+          />
+        </>
+      )}
 
       {/* Toast Modal */}
       {showError && (
@@ -153,6 +189,10 @@ const TransactionScreen = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+  },
+  overlay: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: "rgba(0,0,0,0.5)",
   },
   headerSection: {
     paddingHorizontal: 16,
