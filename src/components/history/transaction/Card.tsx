@@ -9,7 +9,7 @@ import {
   getTransactionType,
 } from "@src/utils/getHelper";
 import { useEffect, useState } from "react";
-import { StyleSheet, Text, View } from "react-native";
+import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
 
 interface CardProps {
   transaction: Transaction;
@@ -40,8 +40,15 @@ export default function Card({ transaction, onPress }: CardProps) {
   );
   const type = getTransactionType(transaction.type);
 
+  // Check
+  const isInvoice = transaction.type === "charging";
+
   return (
-    <View style={styles.card}>
+    <TouchableOpacity
+      onPress={onPress}
+      disabled={!isInvoice}
+      style={styles.card}
+    >
       {/* Header */}
       <View style={[styles.header]}>
         <View style={styles.headerLeft}>
@@ -105,7 +112,7 @@ export default function Card({ transaction, onPress }: CardProps) {
           </Text>
         </View>
       </View>
-    </View>
+    </TouchableOpacity>
   );
 }
 

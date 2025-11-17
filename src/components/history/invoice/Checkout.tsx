@@ -37,7 +37,7 @@ const Checkout = ({
   };
 
   // Render
-  const renderSubscriptionItem = ({ item }: { item: Invoice }) => {
+  const renderItem = ({ item }: { item: Invoice }) => {
     return (
       <View style={[styles.cardContainer]}>
         {/* Biển số xe */}
@@ -85,7 +85,7 @@ const Checkout = ({
             <View style={styles.listContainer}>
               <FlatList
                 data={invoices}
-                renderItem={renderSubscriptionItem}
+                renderItem={renderItem}
                 keyExtractor={(item) => item.invoice.id}
                 showsVerticalScrollIndicator={false}
                 contentContainerStyle={styles.list}

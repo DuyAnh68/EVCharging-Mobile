@@ -1,4 +1,9 @@
-import { Invoice, InvoiceResponse, Summary } from "@src/types/invoice";
+import {
+  Invoice,
+  InvoiceResponse,
+  InvoiceTransaction,
+  Summary,
+} from "@src/types/invoice";
 import { SessionDetail } from "@src/types/session";
 import { SubscriptionPlan } from "@src/types/subscription";
 import { Transaction } from "@src/types/transaction";
@@ -227,9 +232,22 @@ export const toInvoice = (data: any): Invoice => ({
 });
 
 // TRANSACTION
+const toInvoiceTransaction = (inv: any): InvoiceTransaction => ({
+  id: inv._id,
+  plateNumber: inv.vehicle_plate_number,
+  station: inv.station_name,
+  startTime: inv.start_time,
+  endTime: inv.end_time,
+  energyDelivered: inv.energy_delivered_kwh,
+  totalAmount: inv.total_amount,
+});
+
 export const toTransaction = (data: any): Transaction => ({
   id: data._id,
   type: data.type,
+  invoices: Array.isArray(data.invoice_ids)
+    ? data.invoice_ids.map(toInvoiceTransaction)
+    : [],
   companyId: data.companyId || null,
   vnpTxnRef: data.vnp_TxtRef,
   vnpAmount: data.vnp_Amount,

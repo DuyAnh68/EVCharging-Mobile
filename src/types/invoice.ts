@@ -78,3 +78,13 @@ export type PayForChargingReq = {
   invoiceIds: string[];
   amount: number;
 };
+
+export type InvoiceTransaction = {
+  id: string;
+  plateNumber: string;
+  station: string;
+  startTime: string;
+  endTime: string;
+  energyDelivered: number;
+  totalAmount: number;
+};

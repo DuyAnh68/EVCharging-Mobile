@@ -1,8 +1,11 @@
+import { InvoiceTransaction } from "@src/types/invoice";
+
 export type TransactionType = "subscription" | "base_fee" | "charging";
 
 export interface Transaction {
   id: string;
   type: TransactionType;
+  invoices: InvoiceTransaction[];
   companyId: string | null;
   vnpTxnRef: string;
   vnpAmount: number;
@@ -29,5 +32,5 @@ export type TransactionReturn = {
   status: number;
   message?: string;
   transactions: Transaction[];
-  summary?: Summary; 
+  summary?: Summary;
 };
