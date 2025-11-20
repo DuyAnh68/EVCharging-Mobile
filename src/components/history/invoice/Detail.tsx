@@ -359,7 +359,7 @@ const Detail = ({ visible, invoice, onPaymentPress, onClose }: Props) => {
 
                 {isPaid && (
                   <View style={styles.feeContainer}>
-                    <View style={styles.feeRow}>
+                    <View style={[styles.feeRow, { marginBottom: 0 }]}>
                       <Text style={styles.feeLabel}>Phí đặt chỗ</Text>
                       <Text style={styles.feeValue}>
                         {formatVND(invoice.pricing.baseFee)}

@@ -239,7 +239,7 @@ const toInvoiceTransaction = (inv: any): InvoiceTransaction => ({
   startTime: inv.start_time,
   endTime: inv.end_time,
   energyDelivered: inv.energy_delivered_kwh,
-  totalAmount: inv.total_amount,
+  totalAmount: inv.final_amount,
 });
 
 export const toTransaction = (data: any): Transaction => ({

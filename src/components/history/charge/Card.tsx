@@ -161,7 +161,7 @@ export default function Card({ session, onPress }: CardProps) {
         <View style={styles.feeRow}>
           <Text style={styles.feeLabel}>Lượng điện đã xài</Text>
           <Text style={styles.feeValue}>{`${session.energyDeliveredKwh.toFixed(
-            1
+            2
           )} kWh`}</Text>
         </View>
         <View style={styles.feeRow}>
