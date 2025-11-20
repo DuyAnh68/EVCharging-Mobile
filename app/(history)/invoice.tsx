@@ -193,7 +193,7 @@ const InvoiceScreen = () => {
     const payload: PayForChargingReq = {
       userId: user?.userId,
       invoiceIds,
-      amount: totalAmount + 10000,
+      amount: totalAmount,
     };
 
     const res = await payForCharging(payload);
