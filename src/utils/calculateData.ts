@@ -1,6 +1,6 @@
 import { Invoice } from "@src/types/invoice";
 import { Transaction } from "@src/types/transaction";
-import { formatRoundedAmount, formatTimeDuration } from "@src/utils/formatData";
+import { formatTimeDuration } from "@src/utils/formatData";
 
 // CHARGE
 export const calcChargingDuration = (startTime: string, endTime: string) => {
@@ -89,7 +89,7 @@ export const calcSecondsToDuration = (input: number | string): string => {
  */
 export const calcTotalAmount = (selectedInvoices: Invoice[]): number => {
   return selectedInvoices.reduce((total, inv) => {
-    const rounded = formatRoundedAmount(inv.pricing.chargingFee);
+    const rounded = inv.pricing.chargingFee;
     return total + rounded;
   }, 0);
 };

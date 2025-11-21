@@ -23,7 +23,7 @@ import type {
 } from "@src/types/invoice";
 import { calcTotalAmount } from "@src/utils/calculateData";
 import { formatRoundedAmount } from "@src/utils/formatData";
-import { router, useFocusEffect } from "expo-router";
+import { router, useFocusEffect, useLocalSearchParams } from "expo-router";
 import type React from "react";
 import { useCallback, useEffect, useState } from "react";
 import {
@@ -61,6 +61,8 @@ const InvoiceScreen = () => {
       : 0;
   const [showMsg, setShowMsg] = useState<boolean>(false);
   const [msg, setMsg] = useState<string>("");
+  const [showSuccess, setShowSuccess] = useState<boolean>(false);
+  const [successMsg, setSuccessMsg] = useState<string>("");
 
   // Hook
   const { user } = useAuthContext();
@@ -71,7 +73,19 @@ const InvoiceScreen = () => {
     payForCharging,
     isLoading: invoiceLoading,
   } = useInvoice();
-  const { paymentResult, setPaymentResult, isBack, setIsBack } = usePayment();
+  const {
+    paymentResult,
+    setPaymentResult,
+    isBack,
+    setIsBack,
+    type: typeContext,
+    setType,
+  } = usePayment();
+
+  // Param
+  const { type } = useLocalSearchParams<{
+    type: string;
+  }>();
 
   // Api
   const fetchInvoices = useCallback(async () => {
@@ -203,6 +217,10 @@ const InvoiceScreen = () => {
       setShowMsg(true);
     }
 
+    // No VNPay
+    // setSuccessMsg("Thanh toán thành công!");
+    // setShowSuccess(true);
+
     resetSelectedInvoice();
   };
 
@@ -242,19 +260,21 @@ const InvoiceScreen = () => {
   useFocusEffect(
     useCallback(() => {
       // Kiểm tra paymentResult chỉ khi screen này được focus
-      if (paymentResult === "success") {
+      if (paymentResult === "success" && type) {
         setFilterStatus(undefined);
         setIsPayment(false);
         fetchInvoices();
         setPaymentResult(null);
+        setType(null);
       }
 
-      if (paymentResult === "failed" || isBack) {
+      if ((paymentResult === "failed" || isBack) && typeContext) {
         setMsg("Thanh toán thất bại. Vui lòng thử lại sau.");
         setShowMsg(true);
         setFilterStatus(undefined);
         setIsPayment(false);
         setPaymentResult(null);
+        setType(null);
         setIsBack(false);
         fetchInvoices();
       }
@@ -339,6 +359,9 @@ const InvoiceScreen = () => {
               <Text style={styles.paymentLabel}>Bỏ chọn</Text>
             </TouchableOpacity>
           </View>
+          <Text style={styles.noteText}>
+            Lưu ý: Tổng tiền thanh toán cần lớn hơn 20.000đ
+          </Text>
           <Button
             text={`Thanh toán (${selectedInvoiceIds.length})`}
             colorType={hasSelectedInvoice ? "primary" : "grey"}
@@ -401,6 +424,21 @@ const InvoiceScreen = () => {
       )}
 
       {/* Toast Modal */}
+      {showSuccess && (
+        <ModalPopup
+          visible={showSuccess}
+          mode="toast"
+          contentText={successMsg}
+          icon={<FontAwesome5 name="check" size={30} color="white" />}
+          iconBgColor="green"
+          onClose={() => {
+            setShowSuccess(false);
+            setSuccessMsg("");
+          }}
+          modalWidth={355}
+        />
+      )}
+
       {showError && (
         <ModalPopup
           visible={showError}
@@ -499,6 +537,13 @@ const styles = StyleSheet.create({
     fontSize: 15,
     color: TEXTS.secondary,
     fontWeight: "500",
+  },
+  noteText: {
+    fontSize: 12,
+    color: TEXTS.secondary,
+    fontWeight: "500",
+    textAlign: "center",
+    marginBottom: 5,
   },
   listcontainer: {
     paddingTop: 10,

@@ -2,13 +2,14 @@ import { useLoading } from "@src/context/LoadingContext";
 import { usePayment } from "@src/context/PaymentContext";
 import { invoiceService } from "@src/services/invoiceService";
 import { PayForChargingReq } from "@src/types/invoice";
+import { formatRoundedAmount } from "@src/utils/formatData";
 import { router } from "expo-router";
 import { useState } from "react";
 
 export const useInvoice = () => {
   // Hook
   const { showLoading, hideLoading } = useLoading();
-  const { setPaymentUrl } = usePayment();
+  const { setPaymentUrl, setType } = usePayment();
 
   // State
   const [isLoading, setIsLoading] = useState<boolean>(false);
@@ -77,7 +78,13 @@ export const useInvoice = () => {
   const payForCharging = async (payload: PayForChargingReq) => {
     setIsLoading(true);
     try {
-      const res = await invoiceService.createPaymentUrl(payload);
+      const roundedPayload: PayForChargingReq = {
+        ...payload,
+        amount: formatRoundedAmount(payload.amount),
+      };
+
+      // VNPay
+      const res = await invoiceService.createPaymentUrl(roundedPayload);
 
       const isSuccess = res.status === 200 || res.status === 201;
 
@@ -89,6 +96,7 @@ export const useInvoice = () => {
       }
 
       setPaymentUrl(res.data);
+      setType("charging_fee");
 
       setTimeout(() => {
         router.push({
@@ -98,6 +106,18 @@ export const useInvoice = () => {
           },
         });
       }, 5);
+
+      // No VNPay
+      // const res = await invoiceService.payNoVNPay(roundedPayload);
+
+      // const isSuccess = res.status === 200 || res.status === 201;
+
+      // if (!isSuccess) {
+      //   return {
+      //     success: false,
+      //     message: "Thanh toán thất bại. Hãy thử lại sau!",
+      //   };
+      // }
 
       return {
         success: isSuccess,

@@ -3,11 +3,7 @@ import SessionInfo from "@src/components/history/charge/SessionInfo";
 import { COLORS, TEXTS } from "@src/styles/theme";
 import { SessionDetail } from "@src/types/session";
 import { calcChargingDuration } from "@src/utils/calculateData";
-import {
-  formatDateTime,
-  formatRoundedAmount,
-  formatVND,
-} from "@src/utils/formatData";
+import { formatDateTime, formatVND } from "@src/utils/formatData";
 import {
   getChargeStatusColor,
   getChargeStatusLabel,
@@ -148,7 +144,7 @@ export default function Card({ session, onPress }: CardProps) {
         />
         <SessionInfo
           label="Phí sạc"
-          value={formatRoundedAmount(session.chargingFee, { asString: true })}
+          value={formatVND(session.chargingFee)}
           icon="card"
           color={COLORS.warning}
         />

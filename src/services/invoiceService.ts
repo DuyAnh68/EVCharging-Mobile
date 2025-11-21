@@ -16,4 +16,9 @@ export const invoiceService = {
   createPaymentUrl: async (payload: PayForChargingReq) => {
     return await invoiceRepo.createPaymentUrl(payload);
   },
+
+  // No VNPay
+  payNoVNPay: async (payload: PayForChargingReq) => {
+    return await invoiceRepo.payNoVNPay(payload);
+  },
 };

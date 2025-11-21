@@ -1,6 +1,7 @@
 import axiosClient from "@src/apis/axiosClient";
 import {
   PayForSubReq,
+  PayNoVNPayReq,
   SubVehicleReq,
   UpdateSubReq,
 } from "@src/types/subscription";
@@ -48,7 +49,24 @@ export const subscriptionApi = {
 
   // Payment
   payForSubscription: async (payload: PayForSubReq) => {
-    const res = await axiosClient.post(`/payment/pay-for-subscription`, payload);
+    const res = await axiosClient.post(
+      `/payment/pay-for-subscription`,
+      payload
+    );
+
+    return {
+      status: res.status,
+      data: res.data,
+      message: res.data?.message,
+    };
+  },
+
+  // No VNPay
+  payNoVNPay: async (payload: PayNoVNPayReq) => {
+    const res = await axiosClient.post(
+      `/payment/pay-for-subscription-no-vnpay`,
+      payload
+    );
 
     return {
       status: res.status,

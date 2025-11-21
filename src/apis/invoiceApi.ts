@@ -39,4 +39,18 @@ export const invoiceApi = {
       message: res.data?.message,
     };
   },
+
+  // No VNPay
+  payNoVNPay: async (payload: PayForChargingReq) => {
+    const res = await axiosClient.post(
+      `/payment/pay-for-charging-no-vnpay`,
+      payload
+    );
+
+    return {
+      status: res.status,
+      data: res.data,
+      message: res.data?.message,
+    };
+  },
 };

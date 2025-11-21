@@ -3,6 +3,7 @@ import { usePayment } from "@src/context/PaymentContext";
 import { subscriptionService } from "@src/services/subscriptionService";
 import {
   PayForSubReq,
+  PayNoVNPayReq,
   SubVehicleReq,
   UpdateSubReq,
 } from "@src/types/subscription";
@@ -114,5 +115,30 @@ export const useSubscription = () => {
     }, 5);
   };
 
-  return { getSubPlans, create, update, createPaymentUrl, navigateVNPay };
+  // NO VNPAY
+  const payNoVNPay = async (payload: PayNoVNPayReq) => {
+    try {
+      const res = await subscriptionService.payNoVNPay(payload);
+
+      const isSuccess = res.status === 200 || res.status === 201;
+      return {
+        success: isSuccess,
+        data: res.data,
+      };
+    } catch (error: any) {
+      return {
+        success: false,
+        message: "Mua gói thất bại!",
+      };
+    }
+  };
+
+  return {
+    getSubPlans,
+    create,
+    update,
+    createPaymentUrl,
+    navigateVNPay,
+    payNoVNPay,
+  };
 };

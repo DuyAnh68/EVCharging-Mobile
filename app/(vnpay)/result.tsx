@@ -36,7 +36,13 @@ export default function VNPayResult() {
       router.replace("/");
     }
     // else if (type === "charging_fee") router.replace("/(tabs)/charging");
-    else if (type === "charging_fee") router.replace("/(history)/invoice");
+    else if (type === "charging_fee")
+      router.replace({
+        pathname: "/(history)/invoice",
+        params: {
+          type: type,
+        },
+      });
     else router.replace("/(tabs)");
     resetPayment();
   };

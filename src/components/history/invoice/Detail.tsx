@@ -6,11 +6,7 @@ import { useInvoice } from "@src/hooks/useInvoice";
 import { COLORS, TEXTS } from "@src/styles/theme";
 import { Invoice } from "@src/types/invoice";
 import { calcChargingDuration } from "@src/utils/calculateData";
-import {
-  formatDateTime,
-  formatRoundedAmount,
-  formatVND,
-} from "@src/utils/formatData";
+import { formatDateTime, formatVND } from "@src/utils/formatData";
 import {
   getPaymentStatusColor,
   getPaymentStatusLabel,
@@ -34,6 +30,9 @@ type Props = {
 };
 
 const Detail = ({ visible, invoice, onPaymentPress, onClose }: Props) => {
+  // Constant
+  const MINIMUM_AMOUNT = 20000;
+
   // State
   const [formattedDate, setFormattedDate] = useState<string>("");
   const [paymentDate, setPaymentDate] = useState<string>("");
@@ -88,6 +87,7 @@ const Detail = ({ visible, invoice, onPaymentPress, onClose }: Props) => {
   const isActive = invoice.vehicle.isActive;
   const isDiscount = !!invoice.pricing.subscriptionDiscount;
   const isOvertime = invoice.pricing.overtime.hasOvertime;
+  const canPay = invoice.payment.finalAmount >= MINIMUM_AMOUNT;
 
   // Get
   const statusColor = getPaymentStatusColor(invoice.payment.paymentStatus);
@@ -415,28 +415,32 @@ const Detail = ({ visible, invoice, onPaymentPress, onClose }: Props) => {
                       <Text style={styles.totalLabel}>Tổng tiền</Text>
 
                       <Text style={styles.totalValue}>
-                        {formatRoundedAmount(invoice.pricing.totalAmount, {
-                          asString: true,
-                        })}
+                        {formatVND(invoice.pricing.totalAmount)}
                       </Text>
                     </View>
                   </>
                 ) : (
-                  <View
-                    style={[
-                      styles.detailRow,
-                      styles.totalRow,
-                      { borderBottomWidth: 0 },
-                    ]}
-                  >
-                    <Text style={styles.totalLabel}>Cần thanh toán</Text>
+                  <>
+                    <View
+                      style={[
+                        styles.detailRow,
+                        styles.totalRow,
+                        { borderBottomWidth: 0 },
+                      ]}
+                    >
+                      <Text style={styles.totalLabel}>Cần thanh toán</Text>
 
-                    <Text style={styles.totalValue}>
-                      {formatRoundedAmount(invoice.payment.finalAmount, {
-                        asString: true,
-                      })}
-                    </Text>
-                  </View>
+                      <Text style={styles.totalValue}>
+                        {formatVND(invoice.payment.finalAmount)}
+                      </Text>
+                    </View>
+
+                    {!canPay && (
+                      <Text style={styles.noteText}>
+                        Lưu ý: Tổng tiền thanh toán cần lớn hơn 20.000đ
+                      </Text>
+                    )}
+                  </>
                 )}
               </View>
 
@@ -444,10 +448,11 @@ const Detail = ({ visible, invoice, onPaymentPress, onClose }: Props) => {
                 <View style={styles.btnContainer}>
                   <Button
                     text="Thanh toán"
-                    colorType="primary"
+                    colorType={canPay ? "primary" : "grey"}
                     onPress={() => {
                       handlePaymentPress();
                     }}
+                    disabled={!canPay}
                     width={300}
                     height={50}
                     fontSize={18}
@@ -632,6 +637,12 @@ const styles = StyleSheet.create({
     fontSize: 18,
     fontWeight: "700",
     color: COLORS.primary,
+  },
+  noteText: {
+    fontSize: 10,
+    marginTop: 5,
+    color: TEXTS.secondary,
+    fontWeight: "500",
   },
   btnContainer: {
     marginBottom: 85,
