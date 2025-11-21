@@ -46,7 +46,14 @@ export default function VehicleScreen() {
   const { getSubPlans } = useSubscription();
   const { isLoading } = useLoading();
   const { user } = useAuthContext();
-  const { paymentResult, setPaymentResult, isBack, setIsBack } = usePayment();
+  const {
+    paymentResult,
+    setPaymentResult,
+    isBack,
+    setIsBack,
+    type: typeContext,
+    setType,
+  } = usePayment();
 
   // Param
   const { type } = useLocalSearchParams<{
@@ -163,6 +170,7 @@ export default function VehicleScreen() {
       return;
     }
 
+    setSelectedVehicle(null);
     setErrorMsg(res.message || "Xóa xe thất bại!");
     setShowError(true);
   };
@@ -196,20 +204,19 @@ export default function VehicleScreen() {
 
         setShowSuccess(true);
 
-        // Delay fetchVehicles để modal có cơ hội hiển thị
-        setTimeout(() => {
-          fetchVehicles();
-        }, 3100);
+        fetchVehicles();
 
         setPaymentResult(null);
+        setType(null);
       }
 
-      if (paymentResult === "failed" || isBack) {
+      if ((paymentResult === "failed" || isBack) && typeContext) {
         setMsg(
           "Xe của bạn đã được thêm nhưng thanh toán gói thất bại. Vui lòng đăng ký gói lại sau."
         );
         setShowMsg(true);
         setPaymentResult(null);
+        setType(null);
         setIsBack(false);
 
         fetchVehicles();
@@ -343,6 +350,7 @@ export default function VehicleScreen() {
           iconBgColor="green"
           onClose={() => {
             setShowSuccess(false);
+            setSuccessMsg("");
           }}
           modalWidth={355}
         />

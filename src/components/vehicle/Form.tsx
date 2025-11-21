@@ -172,7 +172,10 @@ const Form = ({
         }, 5);
 
         return;
-      } else if (res.step === "createUrl") {
+      } else if (
+        res.step === "createUrl" ||
+        res.step === "createSubscription"
+      ) {
         setErrorMsg(res.message);
         setShowError(true);
         setErrorStep("createUrl");
@@ -215,7 +218,10 @@ const Form = ({
         }, 5);
 
         return;
-      } else if (res.step === "createUrl") {
+      } else if (
+        res.step === "createUrl" ||
+        res.step === "createSubscription"
+      ) {
         setErrorMsg(res.message);
         setShowError(true);
         setErrorStep("createUrl");

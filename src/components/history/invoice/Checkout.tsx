@@ -2,7 +2,7 @@ import { Ionicons } from "@expo/vector-icons";
 import Button from "@src/components/Button";
 import { COLORS, TEXTS } from "@src/styles/theme";
 import { Invoice } from "@src/types/invoice";
-import { formatRoundedAmount } from "@src/utils/formatData";
+import { formatVND } from "@src/utils/formatData";
 import {
   FlatList,
   Modal,
@@ -27,6 +27,9 @@ const Checkout = ({
   onClose,
   onPaymentPress,
 }: Props) => {
+  // Constant
+  const MINIMUM_AMOUNT = 20000;
+
   // Handle logic
   const handleClose = () => {
     onClose();
@@ -35,6 +38,9 @@ const Checkout = ({
   const handlePaymentPress = () => {
     onPaymentPress();
   };
+
+  // Check
+  const canPay = total >= MINIMUM_AMOUNT;
 
   // Render
   const renderItem = ({ item }: { item: Invoice }) => {
@@ -56,7 +62,7 @@ const Checkout = ({
         <View style={styles.infoRow}>
           <Text style={styles.cardLabel}>Tiền:</Text>
           <Text style={styles.value}>
-            {formatRoundedAmount(item.pricing.chargingFee, { asString: true })}
+            {formatVND(item.pricing.chargingFee)}
           </Text>
         </View>
       </View>
@@ -94,16 +100,15 @@ const Checkout = ({
 
             <View style={styles.totalRow}>
               <Text style={styles.totalLabel}>Tổng tiền</Text>
-              <Text style={styles.totalValue}>
-                {formatRoundedAmount(total, { asString: true })}
-              </Text>
+              <Text style={styles.totalValue}>{formatVND(total)}</Text>
             </View>
 
             <View style={styles.btnContainer}>
               <Button
                 text="Thanh toán"
-                colorType="primary"
+                colorType={canPay ? "primary" : "grey"}
                 onPress={handlePaymentPress}
+                disabled={!canPay}
                 width={280}
                 height={50}
                 fontSize={18}

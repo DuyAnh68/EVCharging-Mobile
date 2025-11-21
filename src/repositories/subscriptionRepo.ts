@@ -1,10 +1,12 @@
 import { subscriptionApi } from "@src/apis/subscriptionApi";
 import {
   PayForSubReq,
+  PayNoVNPayReq,
   SubscriptionPlan,
   SubVehicleReq,
-  UpdateSubReq,
-} from "@src/types/subscription";
+  UpdateSubReq
+} from './../types/subscription';
+
 import { toSubPlanListDetail } from "@src/utils/mapData";
 
 export const subscriptionRepo = {
@@ -35,6 +37,13 @@ export const subscriptionRepo = {
   // Payment
   payForSubscription: async (payload: PayForSubReq) => {
     const res = await subscriptionApi.payForSubscription(payload);
+
+    return res;
+  },
+
+  // No VNPay
+   payNoVNPay: async (payload: PayNoVNPayReq) => {
+    const res = await subscriptionApi.payNoVNPay(payload);
 
     return res;
   }

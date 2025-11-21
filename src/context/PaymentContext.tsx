@@ -44,7 +44,6 @@ export const PaymentProvider = ({
 
   const resetPayment = () => {
     setPaymentUrl(null);
-    setType(null);
   };
 
   return (

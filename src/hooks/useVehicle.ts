@@ -15,6 +15,7 @@ export const useVehicle = () => {
     update: updateSub,
     createPaymentUrl,
     navigateVNPay,
+    payNoVNPay,
   } = useSubscription();
 
   // State
@@ -70,6 +71,7 @@ export const useVehicle = () => {
 
       // 2. Nếu có gói đăng ký thì tiếp tục
       if (payload.subscriptionId) {
+        // VNPay
         const subPayload: PayForSubReq = {
           userId: payload.userId,
           vehicle_id: createdVehicle._id,
@@ -99,6 +101,31 @@ export const useVehicle = () => {
             step: "pendingPayment",
           };
         }
+
+        // No VNPay
+        // const subPayload: PayNoVNPayReq = {
+        //   userId: payload.userId,
+        //   vehicle_id: createdVehicle._id,
+        //   subscription_id: payload.subscriptionId,
+        //   amount: payload.amount,
+        //   payment_status: 0,
+        // };
+
+        // const resSub = await payNoVNPay(subPayload);
+
+        // if (!resSub.success) {
+        //   return {
+        //     success: false,
+        //     message: "Mua gói thất bại. Vui lòng mua lại gói đăng ký sau.",
+        //     step: "createSubscription",
+        //   };
+        // }
+
+        // return {
+        //   success: true,
+        //   vehicle: createdVehicle,
+        //   subscription: resSub.data,
+        // };
       }
 
       // 3. Nếu không có gói
@@ -169,6 +196,7 @@ export const useVehicle = () => {
       if (payload.isUpdateSub) {
         if (payload.preSubId === null || payload.preSubId === undefined) {
           // 2.1 Nếu trước đó chưa có gói
+          // VNPay
           const subPayload: PayForSubReq = {
             userId: payload.userId,
             vehicle_id: payload.vehicleId,
@@ -198,6 +226,31 @@ export const useVehicle = () => {
               step: "pendingPayment",
             };
           }
+
+          // // No VNPay
+          // const subPayload: PayNoVNPayReq = {
+          //   userId: payload.userId,
+          //   vehicle_id: payload.vehicleId,
+          //   subscription_id: payload.subId,
+          //   amount: payload.amount,
+          //   payment_status: 0,
+          // };
+
+          // const resSub = await payNoVNPay(subPayload);
+
+          // if (!resSub.success) {
+          //   return {
+          //     success: false,
+          //     message: "Mua gói thất bại. Vui lòng mua lại gói đăng ký sau.",
+          //     step: "createSubscription",
+          //   };
+          // }
+
+          // return {
+          //   success: true,
+          //   vehicle: updatedVehicle,
+          //   subscription: resSub.data,
+          // };
         } else {
           // 2.2 Nếu trước đó có gói
           const resSub = await updateSub(payload.preSubId, payload.subId);

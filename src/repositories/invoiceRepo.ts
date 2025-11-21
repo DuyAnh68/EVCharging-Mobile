@@ -33,4 +33,11 @@ export const invoiceRepo = {
 
     return res;
   },
+
+  // No VNPay
+  payNoVNPay: async (payload: PayForChargingReq) => {
+    const res = await invoiceApi.payNoVNPay(payload);
+
+    return res;
+  },
 };

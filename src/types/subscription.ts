@@ -50,3 +50,11 @@ export type PayForSubReq = {
   amount: number;
   payment_status: string;
 };
+
+export type PayNoVNPayReq = {
+  userId: string;
+  vehicle_id: string;
+  subscription_id: string;
+  amount: number;
+  payment_status: number;
+};
